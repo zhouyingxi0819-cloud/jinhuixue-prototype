@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>线上教育互动工具 · 高保真原型</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" />
+<style>
+  :root {
+    --brand: #1F6FEB;
+    --brand-deep: #0E4DBF;
+    --brand-light: #E8F1FF;
+    --accent: #FF7A45;
+    --accent-soft: #FFF1EA;
+    --gold: #F5B700;
+    --gold-soft: #FFF6DC;
+    --pink: #F5468C;
+    --green: #15B97D;
+    --green-soft: #E6FAF2;
+    --bg: #F4F6FA;
+    --ink: #1A2233;
+    --ink-2: #5B6478;
+    --ink-3: #9099AA;
+    --line: #E8ECF3;
+  }
+  html, body { background: #EEF1F6; color: var(--ink); font-family: -apple-system, "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  .wall { display: grid; grid-template-columns: repeat(auto-fill, 375px); gap: 32px 28px; justify-content: center; padding: 40px 24px 80px; }
+  .screen {
+    width: 375px; height: 812px; background: var(--bg); border-radius: 28px;
+    box-shadow: 0 18px 48px -16px rgba(20, 30, 60, 0.18), 0 2px 6px rgba(20,30,60,0.06);
+    position: relative; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .screen-title { font-size: 12px; color: #6B7488; text-align: center; margin-bottom: 8px; letter-spacing: 0.5px; }
+  .screen-wrap { display: flex; flex-direction: column; align-items: center; }
+  .status-bar {
+    height: 44px; flex: 0 0 44px; background: transparent; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; font-size: 14px; font-weight: 600; color: var(--ink);
+  }
+  .status-bar .right i { margin-left: 4px; font-size: 14px; }
+  .status-bar .right { display: inline-flex; align-items: center; }
+  /* 微信小程序头部胶囊按钮：浮于页面顶部，位于状态栏下方、与标题栏同高，右侧 */
+  .capsule {
+    position: absolute; top: 50px; right: 14px; z-index: 40;
+    display: inline-flex; align-items: center;
+    height: 30px; border-radius: 999px; overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.08);
+    background: rgba(255,255,255,0.55); backdrop-filter: blur(6px);
+    color: var(--ink);
+  }
+  .capsule i { font-size: 16px; line-height: 1; padding: 0 10px; color: inherit; margin: 0 !important; }
+  .capsule .cap-divider { width: 1px; height: 15px; background: rgba(0,0,0,0.12); }
+  /* 深色 / 彩色底：胶囊转为浅色半透明 */
+  .capsule.capsule-light {
+    border-color: rgba(255,255,255,0.45);
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+  }
+  .capsule.capsule-light .cap-divider { background: rgba(255,255,255,0.4); }
+  /* 顶部 toast 提示（活力值获取反馈） */
+  .toast-tip {
+    position: absolute; top: 92px; left: 50%; transform: translateX(-50%);
+    z-index: 60; display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(26,34,51,0.92); color: #fff; font-size: 13px; font-weight: 500;
+    padding: 9px 16px; border-radius: 999px; box-shadow: 0 8px 20px -6px rgba(0,0,0,0.35);
+    white-space: nowrap;
+  }
+  .toast-tip i { color: var(--gold); font-size: 16px; }
+  /* 左滑显示操作（取消收藏/取消点赞 / 取消） */
+  .swipe-wrap { position: relative; overflow: hidden; border-radius: 16px; }
+  .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; align-items: stretch; }
+  .swipe-actions button { display: flex; align-items: center; padding: 0 16px; font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; }
+  .swipe-actions .act-cancel { background: var(--ink-3); }
+  .swipe-actions .act-remove { background: var(--accent); }
+  .swipe-row { position: relative; transform: translateX(0); transition: transform .25s ease; background: #fff; z-index: 1; }
+  .swipe-row.open { transform: translateX(-168px); }
+  .nav-bar { height: 44px; flex: 0 0 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: transparent; }
+  .nav-bar .title { font-size: 17px; font-weight: 600; }
+  .tab-bar {
+    height: 64px; flex: 0 0 64px; display: flex; background: #fff; border-top: 1px solid var(--line);
+    padding-bottom: 4px;
+  }
+  .tab-bar .item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--ink-3); font-size: 11px; }
+  .tab-bar .item.active { color: var(--brand); }
+  .tab-bar .item i { font-size: 22px; }
+  .tab-bar .item.center {
+    position: relative; top: -16px; width: 56px; height: 56px;
+    background: linear-gradient(135deg, var(--brand) 0%, #4D8BFF 100%); border-radius: 50%;
+    color: #fff; box-shadow: 0 8px 20px -6px rgba(31, 111, 235, 0.5);
+  }
+  .tab-bar .item.center i { font-size: 26px; }
+  .tab-bar .item.center span { display: none; }
+  .scroll { flex: 1; overflow-y: auto; }
+  .scroll::-webkit-scrollbar { display: none; }
+  /* gradient brand cards */
+  .grad-brand { background: linear-gradient(135deg, #1F6FEB 0%, #4D8BFF 50%, #6FA2FF 100%); }
+  .grad-warm { background: linear-gradient(135deg, #FF7A45 0%, #FFB07C 100%); }
+  .grad-gold { background: linear-gradient(135deg, #F5B700 0%, #FFD24D 100%); }
+  .grad-pink { background: linear-gradient(135deg, #F5468C 0%, #FF85B0 100%); }
+  .grad-green { background: linear-gradient(135deg, #15B97D 0%, #5BD9A6 100%); }
+  .chip { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 11px; line-height: 18px; font-weight: 500; }
+  .badge-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .qr-pattern {
+    background-image:
+      linear-gradient(45deg, #1A2233 25%, transparent 25%, transparent 75%, #1A2233 75%),
+      linear-gradient(45deg, #1A2233 25%, transparent 25%, transparent 75%, #1A2233 75%);
+    background-size: 8px 8px;
+    background-position: 0 0, 4px 4px;
+  }
+  .ring-progress {
+    --p: 75;
+    background: conic-gradient(var(--brand) calc(var(--p) * 1%), #E8ECF3 0);
+  }
+  /* simple toggle for clickable demo */
+  .hidden-soft { opacity: 0.0; pointer-events: none; }
+  .section-tag { display: inline-block; padding: 6px 14px; border-radius: 999px; background: rgba(31,111,235,0.08); color: var(--brand); font-size: 13px; font-weight: 600; }
+  .toc {
+    max-width: 1200px; margin: 0 auto; padding: 60px 24px 24px;
+  }
+  .toc h1 { font-size: 28px; font-weight: 700; color: var(--ink); }
+  .toc p { color: var(--ink-2); margin-top: 6px; }
+  .toc-grid { margin-top: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .toc-grid a { padding: 12px 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+  .toc-grid a:hover { border-color: var(--brand); color: var(--brand); }
+  .toc-grid a span:last-child { color: var(--ink-3); font-size: 11px; }
+  .group-title { max-width: 1400px; margin: 40px auto 0; padding: 0 24px; display: flex; align-items: center; gap: 12px; }
+  .group-title h2 { font-size: 18px; font-weight: 700; color: var(--ink); }
+  .group-title .line { flex: 1; height: 1px; background: var(--line); }
+  .group-title .meta { color: var(--ink-3); font-size: 12px; }
+  /* half-sheet overlays via :target */
+  #sheet-region:target, #sheet-photo-source:target { display: block !important; }
+  /* banner carousel */
+  .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; gap: 10px; }
+  .carousel::-webkit-scrollbar { display: none; }
+  .carousel > .slide { flex: 0 0 100%; scroll-snap-align: center; }
+</style>
+</head>
+<body>
+<div class="toc">
+  <h1>线上教育互动工具 · 高保真可交互原型</h1>
+  <p>双角色（一线代表 / 药店店员）· 微信小程序形态 · 移动端 375×812 · 可点击演示</p>
+  <div class="toc-grid">
+    <a href="#group-staff-onboard"><span>① 店员入驻</span><span>3 屏</span></a>
+    <a href="#group-staff-home"><span>② 店员首页 + 学习</span><span>3 屏</span></a>
+    <a href="#group-staff-quiz"><span>③ 答题 + 错题集</span><span>3 屏</span></a>
+    <a href="#group-staff-rank"><span>④ 排行榜</span><span>1 屏</span></a>
+    <a href="#group-staff-me"><span>⑤ 个人中心</span><span>7 屏</span></a>
+    <a href="#group-rep"><span>⑥ 代表端</span><span>4 屏</span></a>
+  </div>
+</div>
+<style>@keyframes scan { 0%{transform:translateY(0);} 100%{transform:translateY(255px);} }</style>
+
+<!-- ============ 分组 1：店员入驻 ============ -->
+<div id="group-staff-onboard" class="group-title">
+  <h2>① 店员入驻</h2><div class="line"></div><span class="meta">扫码 → 欢迎 → 注册</span>
+</div>
+<div class="wall">
+
+  <!-- 1.2 扫码加入 -->
+  <div class="screen-wrap">
+    <div class="screen-title">1.2 扫码加入（店员视角）</div>
+    <div class="screen" style="background: #1A2233;">
+      <div class="capsule capsule-light"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="status-bar" style="color: #fff;"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+      <div class="nav-bar"><i class="ri-arrow-left-line text-white text-xl"></i><span class="title text-white">扫码加入</span><i class="ri-flashlight-line text-white text-xl"></i></div>
+      <div class="flex-1 relative flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/40"></div>
+        <div class="relative w-[260px] h-[260px] rounded-2xl border-2 border-white/40">
+          <div class="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-[var(--accent)] rounded-tl-2xl"></div>
+          <div class="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-[var(--accent)] rounded-tr-2xl"></div>
+          <div class="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-[var(--accent)] rounded-bl-2xl"></div>
+          <div class="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-[var(--accent)] rounded-br-2xl"></div>
+          <div class="absolute inset-4 qr-pattern opacity-80 rounded"></div>
+          <div class="absolute left-0 right-0 top-0 h-1 bg-gradient-to-b from-[var(--accent)] to-transparent" style="animation: scan 2s linear infinite;"></div>
+        </div>
+        <div class="absolute bottom-32 left-0 right-0 text-center text-white/70 text-sm">将代表的邀请二维码放入框内</div>
+      </div>
+      <div class="bg-black/30 py-4 flex justify-around">
+        <div class="text-white/80 text-xs flex flex-col items-center gap-1"><i class="ri-image-line text-xl"></i>相册</div>
+        <div class="text-white/80 text-xs flex flex-col items-center gap-1"><i class="ri-qr-code-line text-xl"></i>我的码</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.3 欢迎页 -->
+  <div class="screen-wrap">
+    <div class="screen-title">1.3 欢迎页</div>
+    <div class="screen grad-brand">
+      <div class="capsule capsule-light"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="status-bar text-white"><span>9:41</span><span class="right text-white"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+      <div class="flex-1 flex flex-col text-white relative overflow-hidden px-8 pt-2 pb-10">
+        <div style="position:absolute; right:-50px; top:20px; width:200px; height:200px; background:rgba(255,255,255,0.08); border-radius:50%;"></div>
+        <div style="position:absolute; left:-40px; bottom:120px; width:150px; height:150px; background:rgba(255,255,255,0.06); border-radius:50%;"></div>
+        <!-- brand -->
+        <div class="flex items-center gap-2 mt-2">
+          <div class="w-9 h-9 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center"><i class="ri-capsule-line text-xl"></i></div>
+          <span class="font-semibold">金汇学</span>
+        </div>
+        <!-- welcome hero -->
+        <div class="flex-1 flex flex-col justify-center relative">
+          <div class="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur flex items-center justify-center mb-6">
+            <i class="ri-graduation-cap-fill text-5xl"></i>
+          </div>
+          <div class="text-sm opacity-80">欢迎来到</div>
+          <h1 class="text-3xl font-bold leading-tight mt-1">金汇学</h1>
+          <p class="text-sm leading-7 opacity-90 mt-5">
+            金汇学旨在打造线上学习平台，整合图文、视频类专业内容，不断夯实专业储备，精进从业服务能力。
+          </p>
+        </div>
+        <!-- 协议勾选 -->
+        <label class="flex items-start gap-2 text-xs opacity-90 mb-3" onclick="setTimeout(function(){toggleAgree('agree-welcome','cta-welcome')},0)">
+          <i id="agree-welcome" class="ri-checkbox-blank-circle-line text-base mt-0.5" data-checked="0"></i>
+          <span>我已阅读并同意《用户服务协议》和《隐私政策》</span>
+        </label>
+        <!-- CTA -->
+        <a id="cta-welcome" href="#screen-staff-onboard" class="relative block bg-white text-[var(--brand)] text-center py-3.5 rounded-full font-semibold shadow-lg opacity-50 pointer-events-none">
+          开启进阶之旅 <i class="ri-arrow-right-line align-middle"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.4 信息注册 -->
+  <div class="screen-wrap">
+    <div class="screen-title">1.4 完善店员信息</div>
+    <div id="screen-staff-onboard" class="screen">
+      <div class="capsule"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="status-bar"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+      <div class="nav-bar"><i class="ri-arrow-left-line text-xl"></i><span class="title">完善信息</span><span></span></div>
+      <div class="px-6 pt-2 pb-6">
+        <div class="bg-[var(--brand-light)] rounded-xl p-4 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center"><i class="ri-user-star-line text-[var(--brand)]"></i></div>
+          <div class="text-xs leading-5">
+            <div class="text-[var(--ink-2)]">您将由代表 <span class="text-[var(--brand)] font-semibold">王晓明</span> 邀请加入</div>
+            <div class="text-[var(--ink-3)]">华东大区 · 上海一区</div>
+          </div>
+        </div>
+      </div>
+      <div class="px-6 flex-1 scroll">
+        <div class="space-y-5">
+          <div>
+            <label class="text-xs text-[var(--ink-3)]">姓名 <span class="text-red-500">*</span></label>
+            <input class="w-full mt-2 pb-2 border-b border-[var(--line)] outline-none text-base" placeholder="请输入真实姓名" value="李娟" />
+          </div>
+          <div>
+            <label class="text-xs text-[var(--ink-3)]">职位</label>
+            <div class="flex gap-2 mt-2">
+              <button class="flex-1 py-2 rounded-lg border-2 border-[var(--brand)] text-[var(--brand)] text-sm font-medium bg-[var(--brand-light)]">店员</button>
+              <button class="flex-1 py-2 rounded-lg border border-[var(--line)] text-[var(--ink-2)] text-sm">执业药师</button>
+            </div>
+          </div>
+          <div>
+            <label class="text-xs text-[var(--ink-3)]">所属省/市 <span class="text-red-500">*</span></label>
+            <a href="#sheet-region" class="mt-2 pb-2 border-b border-[var(--line)] flex justify-between items-center">
+              <span class="text-base">上海市 / 上海市</span>
+              <i class="ri-arrow-down-s-line text-[var(--ink-3)]"></i>
+            </a>
+          </div>
+          <div>
+            <label class="text-xs text-[var(--ink-3)]">所属门店 <span class="text-red-500">*</span></label>
+            <div class="mt-2 pb-2 border-b border-[var(--line)] flex justify-between items-center">
+              <span class="text-base">国大药房 · 张江高科店</span>
+              <i class="ri-arrow-right-s-line text-[var(--ink-3)]"></i>
+            </div>
+          </div>
+          <!-- 岗位证明上传 -->
+          <div>
+            <div class="flex items-center justify-between">
+              <label class="text-xs text-[var(--ink-3)]">岗位证明 <span class="text-red-500">*</span></label>
+            </div>
+            <div class="mt-2 grid grid-cols-2 gap-3">
+              <!-- 工牌照片 -->
+              <div>
+                <div class="aspect-[4/3] rounded-xl bg-gradient-to-br from-[#E8F1FF] to-[#C5DAFF] relative overflow-hidden flex flex-col items-center justify-center gap-1 text-[var(--brand)]">
+                  <i class="ri-id-card-fill text-3xl"></i>
+                  <span class="text-[10px] font-medium opacity-80">点击查看</span>
+                  <button class="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/40 text-white flex items-center justify-center"><i class="ri-close-line text-[10px]"></i></button>
+                  <div class="absolute bottom-1 left-1 chip" style="background:rgba(21,185,125,0.95);color:#fff;font-size:9px;padding:1px 5px;line-height:1.4;"><i class="ri-check-line"></i>已上传</div>
+                </div>
+                <div class="text-[11px] text-[var(--ink-2)] text-center mt-1.5">工牌照片 <span class="text-red-500">*</span></div>
+              </div>
+              <!-- 执业证照 -->
+              <div>
+                <a href="#sheet-photo-source" class="w-full aspect-[4/3] rounded-xl border-2 border-dashed border-[var(--brand)]/40 bg-[var(--brand-light)]/50 flex flex-col items-center justify-center gap-1 text-[var(--brand)]">
+                  <i class="ri-upload-cloud-2-line text-3xl"></i>
+                  <span class="text-[11px] font-medium">点击上传</span>
+                </a>
+                <div class="text-[11px] text-[var(--ink-2)] text-center mt-1.5">执业证照 <span class="text-[var(--accent)] font-medium">（执业药师）</span></div>
+              </div>
+            </div>
+            <div class="mt-2 bg-[var(--accent-soft)] rounded-lg px-3 py-2 flex items-start gap-2">
+              <i class="ri-information-line text-[var(--accent)] text-sm mt-0.5"></i>
+              <p class="text-[11px] text-[var(--ink-2)] leading-5">
+                请上传<span class="font-semibold text-[var(--ink)]">工牌照片</span>，确保门店名称、岗位与姓名信息清晰可见；选择"<span class="text-[var(--accent)] font-semibold">执业药师</span>"还需上传<span class="font-semibold text-[var(--ink)]">有效执业证照</span>用于身份审核。
+              </p>
+            </div>
+          </div>
+          <div>
+            <label class="text-xs text-[var(--ink-3)]">手机号 <span class="text-red-500">*</span></label>
+            <div class="mt-2 pb-2 border-b border-[var(--line)] flex justify-between items-center">
+              <span class="text-base text-[var(--ink-3)]">请获取手机号</span>
+              <button class="chip" style="background:var(--brand-light);color:var(--brand);font-weight:600;padding:4px 12px;"><i class="ri-phone-line"></i> 点击获取手机号</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="px-6 pb-8 pt-4">
+        <a href="#screen-staff-home" class="block grad-brand text-white text-center py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-500/30">确认信息，开启学习</a>
+      </div>
+
+      <!-- 半层：省市选择器 -->
+      <div id="sheet-region" class="absolute inset-0" style="display:none;">
+        <a href="#screen-staff-onboard" class="absolute inset-0 bg-black/40"></a>
+        <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden">
+          <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--line)]">
+            <a href="#screen-staff-onboard" class="text-sm text-[var(--ink-3)]">取消</a>
+            <span class="text-sm font-semibold">选择所属省/市</span>
+            <a href="#screen-staff-onboard" class="text-sm text-[var(--brand)] font-semibold">确定</a>
+          </div>
+          <!-- 自动定位 -->
+          <a href="#screen-staff-onboard" class="flex items-center gap-2 px-5 py-3 bg-[var(--brand-light)] text-[var(--brand)]">
+            <i class="ri-map-pin-user-line text-lg"></i>
+            <span class="text-sm font-medium">自动定位当前城市</span>
+            <span class="ml-auto text-xs text-[var(--ink-3)]">上海市 / 上海市</span>
+          </a>
+          <!-- 滚动选择省市 -->
+          <div class="flex h-52 text-sm relative">
+            <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-9 bg-[var(--bg)] rounded-lg mx-4 pointer-events-none"></div>
+            <div class="flex-1 overflow-y-auto text-center py-[88px] relative" style="scrollbar-width:none;">
+              <div class="py-2 text-[var(--ink-3)]">江苏省</div>
+              <div class="py-2 text-[var(--ink-3)]">浙江省</div>
+              <div class="py-2 text-[var(--ink)] font-semibold">上海市</div>
+              <div class="py-2 text-[var(--ink-3)]">广东省</div>
+              <div class="py-2 text-[var(--ink-3)]">北京市</div>
+            </div>
+            <div class="flex-1 overflow-y-auto text-center py-[88px] relative" style="scrollbar-width:none;">
+              <div class="py-2 text-[var(--ink-3)]">黄浦区</div>
+              <div class="py-2 text-[var(--ink-3)]">徐汇区</div>
+              <div class="py-2 text-[var(--ink)] font-semibold">上海市</div>
+              <div class="py-2 text-[var(--ink-3)]">浦东新区</div>
+              <div class="py-2 text-[var(--ink-3)]">静安区</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 半层：拍照 / 相册选择 -->
+      <div id="sheet-photo-source" class="absolute inset-0" style="display:none;">
+        <a href="#screen-staff-onboard" class="absolute inset-0 bg-black/40"></a>
+        <div class="absolute bottom-0 left-0 right-0 bg-[var(--bg)] rounded-t-2xl overflow-hidden pb-2">
+          <a href="#screen-staff-onboard" class="block bg-white text-center py-4 text-sm text-[var(--brand)] font-medium border-b border-[var(--line)]"><i class="ri-camera-line mr-1"></i> 拍照</a>
+          <a href="#screen-staff-onboard" class="block bg-white text-center py-4 text-sm text-[var(--brand)] font-medium">从相册选择</a>
+          <a href="#screen-staff-onboard" class="block bg-white text-center py-4 text-sm text-[var(--ink-3)] mt-2 mx-2 rounded-xl">取消</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ 分组 2：店员首页 + 学习 ============ -->
+<div id="group-staff-home" class="group-title">
+  <h2>② 店员首页 + 学习内容</h2><div class="line"></div><span class="meta">首页 → 知识金刚区 → 内容详情</span>
+</div>
+<div class="wall">
+
+  <!-- 2.1 店员首页 -->
+  <div class="screen-wrap">
+    <div class="screen-title">2.1 首页（店员视角）</div>
+    <div id="screen-staff-home" class="screen">
+      <div class="capsule capsule-light"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="scroll">
+        <!-- header gradient (含状态栏) -->
+        <div class="grad-brand px-5 pt-0 pb-5 text-white relative" style="border-radius: 0 0 24px 24px;">
+          <div style="position:absolute; right:-30px; top:-30px; width:160px; height:160px; background:rgba(255,255,255,0.08); border-radius:50%;"></div>
+          <div class="status-bar text-white" style="padding:0 4px;"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+          <div class="flex items-center gap-3 pt-1">
+            <div class="w-10 h-10 rounded-full bg-white/30 backdrop-blur flex items-center justify-center font-semibold">李</div>
+            <div class="flex-1">
+              <div class="text-xs opacity-80">欢迎回来，李娟</div>
+              <div class="text-sm font-medium">国大药房 · 张江高科店</div>
+            </div>
+          </div>
+          <!-- daily check-in card -->
+          <div class="mt-4 bg-white/15 backdrop-blur rounded-2xl p-3.5 flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-white/30 flex items-center justify-center"><i class="ri-calendar-check-line text-2xl"></i></div>
+            <div class="flex-1">
+              <div class="text-sm font-semibold">每日签到</div>
+              <div class="text-xs opacity-80 mt-0.5">今日未签到，签到后将连续签到 6 天</div>
+            </div>
+            <button class="bg-white text-[var(--brand)] text-sm font-semibold px-4 py-2 rounded-full">签到</button>
+          </div>
+        </div>
+
+        <!-- floating points card overlapping -->
+        <div class="px-5 mt-3">
+          <div class="bg-white rounded-2xl shadow-md shadow-blue-100 p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl grad-warm flex items-center justify-center text-white"><i class="ri-coin-line text-2xl"></i></div>
+              <div>
+                <div class="text-xs text-[var(--ink-3)]">我的活力值</div>
+                <div class="text-2xl font-bold text-[var(--ink)]">2,860</div>
+              </div>
+            </div>
+            <div class="text-right border-l border-[var(--line)] pl-4">
+              <div class="text-xs text-[var(--ink-3)]">门店排名</div>
+              <div class="text-2xl font-bold text-[var(--accent)]">No.3</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5 module quick entries -->
+        <div class="px-5 mt-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="font-semibold text-[var(--ink)]">学习天地</span>
+            <span class="text-xs text-[var(--ink-3)]">查看全部 <i class="ri-arrow-right-s-line"></i></span>
+          </div>
+          <div class="grid grid-cols-5 gap-2">
+            <a href="#screen-staff-list" class="flex flex-col items-center gap-1.5">
+              <div class="w-12 h-12 rounded-xl bg-[#FFE9E5] flex items-center justify-center"><i class="ri-virus-line text-xl text-[#F5468C]"></i></div>
+              <span class="text-xs">疾病</span>
+            </a>
+            <div class="flex flex-col items-center gap-1.5">
+              <div class="w-12 h-12 rounded-xl bg-[#E8F1FF] flex items-center justify-center"><i class="ri-stethoscope-line text-xl text-[var(--brand)]"></i></div>
+              <span class="text-xs">治疗</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5">
+              <div class="w-12 h-12 rounded-xl bg-[#E6FAF2] flex items-center justify-center"><i class="ri-capsule-line text-xl text-[var(--green)]"></i></div>
+              <span class="text-xs">解药</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5">
+              <div class="w-12 h-12 rounded-xl bg-[#FFF6DC] flex items-center justify-center"><i class="ri-shield-cross-line text-xl text-[var(--gold)]"></i></div>
+              <span class="text-xs">预防</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5">
+              <div class="w-12 h-12 rounded-xl bg-[#F0EAFF] flex items-center justify-center"><i class="ri-book-read-line text-xl text-[#7E5BEF]"></i></div>
+              <span class="text-xs">案例</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- banner -->
+        <div class="px-5 mt-5">
+          <a href="#screen-staff-list" class="block grad-warm rounded-2xl p-4 text-white relative overflow-hidden">
+            <div class="text-base font-semibold">开口说练习</div>
+            <div class="text-xs opacity-90 mt-1">跟读话术赢活力值 ›</div>
+            <i class="ri-mic-line text-7xl absolute right-2 -bottom-3 opacity-30"></i>
+          </a>
+        </div>
+
+        <!-- recommend list -->
+        <div class="px-5 mt-5">
+          <div class="flex items-center gap-4 mb-3">
+            <span class="font-semibold text-[var(--ink)]">推荐学习</span>
+            <div class="flex items-center gap-3 ml-auto text-xs text-[var(--ink-3)]">
+              <span class="text-[var(--brand)] font-medium">最新</span>
+              <span>最热</span>
+            </div>
+          </div>
+          <a href="#screen-staff-detail" class="relative bg-white rounded-2xl p-3 flex gap-3 mb-3 shadow-sm overflow-hidden">
+            <span class="absolute top-0 left-0 chip" style="background:var(--accent);color:#fff;border-radius:0 0 10px 0;font-size:10px;padding:2px 8px;z-index:10;">未读</span>
+            <div class="w-24 h-20 rounded-xl bg-gradient-to-br from-[#1F6FEB] to-[#6FA2FF] flex items-center justify-center text-white flex-shrink-0 relative">
+              <i class="ri-play-circle-fill text-3xl"></i>
+              <span class="absolute right-1 bottom-1 text-[10px] bg-black/40 px-1 rounded">12:30</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold leading-snug line-clamp-2">金纳多临床应用：慢性脑供血不足的联合用药策略</div>
+              <div class="text-xs text-[var(--ink-3)] mt-1.5 flex items-center gap-2">
+                <span class="chip" style="background:#E8F1FF; color:var(--brand);">治疗</span>
+                <span><i class="ri-eye-line"></i> 1.2k</span>
+                <span><i class="ri-time-line"></i> 今天</span>
+              </div>
+            </div>
+            <span class="absolute right-3 bottom-2.5 text-xs font-semibold text-[var(--accent)]">+10 活力值</span>
+          </a>
+          <div class="relative bg-white rounded-2xl p-3 flex gap-3 mb-3 shadow-sm overflow-hidden">
+            <span class="absolute top-0 left-0 chip" style="background:var(--accent);color:#fff;border-radius:0 0 10px 0;font-size:10px;padding:2px 8px;z-index:10;">未读</span>
+            <div class="w-24 h-20 rounded-xl bg-gradient-to-br from-[#F5468C] to-[#FF85B0] flex items-center justify-center text-white flex-shrink-0">
+              <i class="ri-file-text-line text-3xl"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold leading-snug line-clamp-2">中老年人记忆减退与早期脑供血不足的识别要点</div>
+              <div class="text-xs text-[var(--ink-3)] mt-1.5 flex items-center gap-2">
+                <span class="chip" style="background:#FFE9E5; color:#F5468C;">疾病</span>
+                <span><i class="ri-eye-line"></i> 856</span>
+                <span><i class="ri-time-line"></i> 昨天</span>
+              </div>
+            </div>
+            <span class="absolute right-3 bottom-2.5 text-xs font-semibold text-[var(--accent)]">+10 活力值</span>
+          </div>
+          <div class="bg-white rounded-2xl p-3 flex gap-3 mb-3 shadow-sm">
+            <div class="w-24 h-20 rounded-xl bg-gradient-to-br from-[#15B97D] to-[#5BD9A6] flex items-center justify-center text-white flex-shrink-0">
+              <i class="ri-capsule-line text-3xl"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold leading-snug line-clamp-2">金纳多® 银杏叶提取物 EGb 761 作用机制详解（图文）</div>
+              <div class="text-xs text-[var(--ink-3)] mt-1.5 flex items-center gap-2">
+                <span class="chip" style="background:#E6FAF2; color:var(--green);">解药</span>
+                <span><i class="ri-eye-line"></i> 2.4k</span>
+                <span><i class="ri-time-line"></i> 2026-04-27</span>
+              </div>
+            </div>
+          </div>
+          <div class="h-4"></div>
+        </div>
+      </div>
+      <!-- tab bar -->
+      <div class="tab-bar">
+        <a href="#screen-staff-home" class="item active"><i class="ri-home-5-fill"></i><span>首页</span></a>
+        <a href="#screen-staff-rank" class="item"><i class="ri-trophy-line"></i><span>排行榜</span></a>
+        <a href="#screen-staff-me" class="item"><i class="ri-user-3-line"></i><span>我的</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2.2 知识模块列表 -->
+  <div class="screen-wrap">
+    <div class="screen-title">2.2 知识模块列表</div>
+    <div id="screen-staff-list" class="screen">
+      <div class="capsule"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="status-bar"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+      <div class="nav-bar">
+        <a href="#screen-staff-home"><i class="ri-arrow-left-line text-xl"></i></a>
+        <span class="title">学习天地</span>
+        <i class="ri-search-line text-xl"></i>
+      </div>
+      <!-- segmented tabs -->
+      <div class="px-5 pt-1 pb-3">
+        <div class="flex gap-2 overflow-x-auto" style="scrollbar-width: none;">
+          <button class="px-4 py-1.5 rounded-full bg-[var(--brand)] text-white text-sm font-medium whitespace-nowrap">疾病</button>
+          <button class="px-4 py-1.5 rounded-full bg-white border border-[var(--line)] text-sm whitespace-nowrap">治疗</button>
+          <button class="px-4 py-1.5 rounded-full bg-white border border-[var(--line)] text-sm whitespace-nowrap">解药</button>
+          <button class="px-4 py-1.5 rounded-full bg-white border border-[var(--line)] text-sm whitespace-nowrap">预防</button>
+          <button class="px-4 py-1.5 rounded-full bg-white border border-[var(--line)] text-sm whitespace-nowrap">案例</button>
+        </div>
+      </div>
+      <div class="scroll px-5 pb-4">
+        <!-- banner 轮播 -->
+        <div class="mb-4">
+          <div class="carousel rounded-2xl">
+            <a href="#screen-staff-detail" class="slide rounded-2xl overflow-hidden relative h-36 grad-pink flex items-end p-4 text-white">
+              <div style="position:absolute;right:-10px;top:-20px;width:130px;height:130px;background:rgba(255,255,255,0.15);border-radius:50%;"></div>
+              <i class="ri-virus-fill text-7xl absolute right-3 top-3 opacity-30"></i>
+              <div class="relative">
+                <span class="chip" style="background:rgba(255,255,255,0.25);color:#fff;">疾病专题</span>
+                <div class="text-lg font-bold mt-1.5 leading-snug">脑血管疾病全景<br/>从脑供血不足到认知衰退</div>
+              </div>
+            </a>
+            <a href="#screen-staff-detail" class="slide rounded-2xl overflow-hidden relative h-36 grad-brand flex items-end p-4 text-white">
+              <div style="position:absolute;right:-10px;top:-20px;width:130px;height:130px;background:rgba(255,255,255,0.15);border-radius:50%;"></div>
+              <i class="ri-capsule-fill text-7xl absolute right-3 top-3 opacity-30"></i>
+              <div class="relative">
+                <span class="chip" style="background:rgba(255,255,255,0.25);color:#fff;">新品上市</span>
+                <div class="text-lg font-bold mt-1.5 leading-snug">金纳多 EGb 761<br/>标准化提取物机制详解</div>
+              </div>
+            </a>
+            <a href="#screen-staff-detail" class="slide rounded-2xl overflow-hidden relative h-36 grad-green flex items-end p-4 text-white">
+              <div style="position:absolute;right:-10px;top:-20px;width:130px;height:130px;background:rgba(255,255,255,0.15);border-radius:50%;"></div>
+              <i class="ri-mic-fill text-7xl absolute right-3 top-3 opacity-30"></i>
+              <div class="relative">
+                <span class="chip" style="background:rgba(255,255,255,0.25);color:#fff;">开口说</span>
+                <div class="text-lg font-bold mt-1.5 leading-snug">跟读练习赢活力值<br/>把话术讲到位</div>
+              </div>
+            </a>
+          </div>
+          <!-- 轮播指示点 -->
+          <div class="flex justify-center gap-1.5 mt-2">
+            <span class="w-4 h-1.5 rounded-full bg-[var(--brand)]"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-[var(--line)]"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-[var(--line)]"></span>
+          </div>
+        </div>
+        <!-- list（布局与首页推荐学习一致） -->
+        <div class="space-y-3">
+          <a href="#screen-staff-detail" class="relative bg-white rounded-2xl p-3 flex gap-3 shadow-sm overflow-hidden">
+            <span class="absolute top-0 left-0 chip" style="background:var(--accent);color:#fff;border-radius:0 0 10px 0;font-size:10px;padding:2px 8px;z-index:10;">未读</span>
+            <div class="w-24 h-20 rounded-xl bg-[#FFE9E5] flex items-center justify-center text-[#F5468C] flex-shrink-0"><i class="ri-heart-pulse-line text-3xl"></i></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold leading-snug line-clamp-2">2024 版脑供血不足诊疗共识：金纳多临床定位</div>
+              <div class="text-xs text-[var(--ink-3)] mt-1.5 flex items-center gap-2">
+                <span class="chip" style="background:#FFE9E5; color:#F5468C;">疾病</span>
+                <span><i class="ri-eye-line"></i> 1,289</span>
+                <span><i class="ri-time-line"></i> 今天</span>
+              </div>
+            </div>
+            <span class="absolute right-3 bottom-2.5 text-xs font-semibold text-[var(--accent)]">+10 活力值</span>
+          </a>
+          <a href="#screen-staff-detail" class="relative bg-white rounded-2xl p-3 flex gap-3 shadow-sm overflow-hidden">
+            <span class="absolute top-0 left-0 chip" style="background:var(--accent);color:#fff;border-radius:0 0 10px 0;font-size:10px;padding:2px 8px;z-index:10;">未读</span>
+            <div class="w-24 h-20 rounded-xl bg-gradient-to-br from-[#F5468C] to-[#FF85B0] flex items-center justify-center text-white flex-shrink-0 relative">
+              <i class="ri-play-circle-fill text-3xl"></i>
+              <span class="absolute right-1 bottom-1 text-[10px] bg-black/50 px-1 rounded">08:42</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold leading-snug line-clamp-2">耳鸣眩晕背后的脑供血信号（视频）</div>
+              <div class="text-xs text-[var(--ink-3)] mt-1.5 flex items-center gap-2">
+                <span class="chip" style="background:#FFE9E5; color:#F5468C;">疾病</span>
+                <span><i class="ri-eye-line"></i> 856</span>
+                <span><i class="ri-time-line"></i> 昨天</span>
+              </div>
+            </div>
+            <span class="absolute right-3 bottom-2.5 text-xs font-semibold text-[var(--accent)]">+10 活力值</span>
+          </a>
+          <a href="#screen-staff-detail" class="relative bg-white rounded-2xl p-3 flex gap-3 shadow-sm overflow-hidden">
+            <span class="absolute top-0 left-0 chip" style="background:var(--accent);color:#fff;border-radius:0 0 10px 0;font-size:10px;padding:2px 8px;z-index:10;">未读</span>
+            <div class="w-24 h-20 rounded-xl bg-[#FFE9E5] flex items-center justify-center text-[#F5468C] flex-shrink-0"><i class="ri-pulse-line text-3xl"></i></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold leading-snug line-clamp-2">慢性脑供血不足与认知衰退：被忽视的进展通路</div>
+              <div class="text-xs text-[var(--ink-3)] mt-1.5 flex items-center gap-2">
+                <span class="chip" style="background:#FFE9E5; color:#F5468C;">疾病</span>
+                <span><i class="ri-eye-line"></i> 432</span>
+                <span><i class="ri-time-line"></i> 2 天前</span>
+              </div>
+            </div>
+            <span class="absolute right-3 bottom-2.5 text-xs font-semibold text-[var(--accent)]">+10 活力值</span>
+          </a>
+          <div class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm opacity-70">
+            <div class="w-24 h-20 rounded-xl bg-[#FFE9E5] flex items-center justify-center text-[#F5468C] flex-shrink-0"><i class="ri-mental-health-line text-3xl"></i></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold leading-snug line-clamp-1">情绪、睡眠与脑供血的关系</div>
+              <div class="text-xs text-[var(--ink-3)] mt-1.5 flex items-center gap-2">
+                <span class="chip" style="background:#FFE9E5; color:#F5468C;">疾病</span>
+                <span><i class="ri-eye-line"></i> 1,022</span>
+                <span><i class="ri-time-line"></i> 1 周前</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2.3 内容详情 -->
+  <div class="screen-wrap">
+    <div class="screen-title">2.3 学习内容详情</div>
+    <div id="screen-staff-detail" class="screen">
+      <div class="capsule"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <!-- 有效阅读后弹出的 toast 提示 -->
+      <div class="toast-tip"><i class="ri-copper-coin-fill"></i> 活力值 +10，获取成功</div>
+      <div class="status-bar"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+      <div class="nav-bar">
+        <a href="#screen-staff-list"><i class="ri-arrow-left-line text-xl"></i></a>
+        <i class="ri-share-forward-line text-xl"></i>
+      </div>
+      <div class="scroll px-5 pb-24">
+        <h1 class="text-xl font-bold leading-snug mt-3">2024 版脑供血不足诊疗共识：金纳多临床定位</h1>
+        <div class="flex items-center gap-2 mt-3 text-xs text-[var(--ink-3)]">
+          <span class="chip" style="background:#FFE9E5;color:#F5468C;">疾病</span>
+          <span>今天</span>
+          <span>·</span>
+          <span><i class="ri-eye-line"></i> 1,289</span>
+          <!-- 活力值获取状态：有效阅读后由「待获得」变为「已获得」 -->
+          <span class="ml-auto chip" style="background:var(--green-soft);color:var(--green);font-weight:600;"><i class="ri-checkbox-circle-fill"></i> 已获得 +10</span>
+        </div>
+
+        <!-- key message highlight -->
+        <div class="mt-5 bg-[var(--brand-light)] rounded-xl p-4 border-l-4 border-[var(--brand)]">
+          <div class="flex items-center gap-2 text-[var(--brand)] font-semibold text-sm">
+            <i class="ri-lightbulb-flash-line"></i> 核心要点 Key Message
+          </div>
+          <ul class="mt-2 space-y-1.5 text-xs text-[var(--ink-2)] leading-relaxed">
+            <li>· 银杏叶提取物 EGb 761 改善脑微循环，证据等级 II A</li>
+            <li>· 金纳多® 适用于慢性脑供血不足、轻度认知障碍、耳鸣眩晕</li>
+            <li>· 推荐疗程 ≥ 8 周，长期使用安全性已被多项研究验证</li>
+          </ul>
+        </div>
+
+        <p class="text-sm leading-7 text-[var(--ink-2)] mt-5">
+          2024 年新版共识在多个维度做了重要更新。其中最受关注的是<span class="text-[var(--ink)] font-medium">银杏叶提取物 EGb 761 在改善脑微循环、缓解记忆减退方面</span>的循证依据进一步丰富……
+        </p>
+        <div class="my-4 rounded-xl overflow-hidden bg-gradient-to-br from-[#1F6FEB] to-[#6FA2FF] h-44 flex items-center justify-center text-white">
+          <i class="ri-line-chart-line text-5xl"></i>
+        </div>
+        <p class="text-sm leading-7 text-[var(--ink-2)]">
+          新版共识将脑微循环改善药纳入慢性脑供血不足一线用药推荐，建议规律服用 8 周以上以观察认知功能改善……
+        </p>
+
+        <!-- attached quiz banner -->
+        <a href="#screen-staff-quiz" class="block mt-6 grad-warm rounded-2xl p-4 text-white flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-white/25 flex items-center justify-center"><i class="ri-question-answer-line text-2xl"></i></div>
+          <div class="flex-1">
+            <div class="text-sm font-semibold">学习完成？挑战 5 题答题</div>
+            <div class="text-xs opacity-90 mt-0.5">最多可得 50 活力值</div>
+          </div>
+          <i class="ri-arrow-right-s-line text-2xl"></i>
+        </a>
+      </div>
+      <!-- bottom action bar -->
+      <div class="absolute bottom-0 left-0 right-0 bg-white border-t border-[var(--line)] flex items-center px-4 py-3 gap-3">
+        <button class="flex flex-col items-center text-xs text-[var(--ink-2)]"><i class="ri-star-line text-xl"></i><span>收藏</span></button>
+        <button class="flex flex-col items-center text-xs text-[var(--ink-2)] mr-1"><i class="ri-thumb-up-line text-xl"></i><span>238</span></button>
+        <a href="#screen-staff-quiz" class="flex-1 grad-brand text-white text-center py-3 rounded-full font-semibold text-sm">开始答题 +50 活力值</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ 分组 3：答题闭环 ============ -->
+<div id="group-staff-quiz-section" class="group-title">
+  <h2>③ 答题闭环</h2><div class="line"></div><span class="meta">答题 → 即时反馈 → 解析 → 结算</span>
+</div>
+<div class="wall">
+
+  <!-- 3.1 答题中 -->
+  <div class="screen-wrap">
+    <div class="screen-title">3.1 答题中</div>
+    <div id="screen-staff-quiz" class="screen">
+      <div class="capsule"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="status-bar"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+      <div class="nav-bar">
+        <a href="#screen-staff-detail"><i class="ri-close-line text-xl"></i></a>
+        <span class="title">题目挑战</span>
+        <span class="text-sm text-[var(--brand)] font-semibold">3/5</span>
+      </div>
+      <div class="px-5">
+        <div class="h-1.5 bg-[var(--line)] rounded-full overflow-hidden">
+          <div class="h-full grad-brand rounded-full" style="width: 60%"></div>
+        </div>
+      </div>
+      <div class="scroll px-5 pt-5 pb-4">
+        <div class="flex items-center gap-2">
+          <span class="chip" style="background:var(--brand-light); color:var(--brand);">单选</span>
+          <span class="chip" style="background:var(--accent-soft); color:var(--accent);"><i class="ri-coin-line"></i> 10 分</span>
+          <span class="ml-auto flex items-center gap-1 text-xs text-[var(--ink-3)]"><i class="ri-time-line"></i> 00:24</span>
+        </div>
+        <h2 class="mt-4 text-base font-semibold leading-relaxed">
+          关于金纳多® 银杏叶提取物 EGb 761，下列哪项作用机制描述<span class="text-[var(--brand)]">最准确</span>？
+        </h2>
+        <div class="mt-5 space-y-3">
+          <button class="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-[var(--line)] bg-white text-left">
+            <div class="w-7 h-7 rounded-full border-2 border-[var(--ink-3)] flex items-center justify-center text-sm font-semibold text-[var(--ink-2)]">A</div>
+            <div class="flex-1 text-sm">仅作为单纯抗血小板药物使用</div>
+          </button>
+          <button class="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-[var(--brand)] bg-[var(--brand-light)] text-left">
+            <div class="w-7 h-7 rounded-full bg-[var(--brand)] flex items-center justify-center text-sm font-semibold text-white">B</div>
+            <div class="flex-1 text-sm font-medium text-[var(--brand)]">扩张脑血管 + 抗氧化 + 改善神经元代谢，多靶点协同</div>
+            <i class="ri-checkbox-circle-fill text-xl text-[var(--brand)]"></i>
+          </button>
+          <button class="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-[var(--line)] bg-white text-left">
+            <div class="w-7 h-7 rounded-full border-2 border-[var(--ink-3)] flex items-center justify-center text-sm font-semibold text-[var(--ink-2)]">C</div>
+            <div class="flex-1 text-sm">直接作用于神经递质受体</div>
+          </button>
+          <button class="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-[var(--line)] bg-white text-left">
+            <div class="w-7 h-7 rounded-full border-2 border-[var(--ink-3)] flex items-center justify-center text-sm font-semibold text-[var(--ink-2)]">D</div>
+            <div class="flex-1 text-sm">通过降低血压改善脑供血</div>
+          </button>
+        </div>
+      </div>
+      <div class="px-5 pb-8 pt-2">
+        <a href="#screen-staff-quiz-correct" class="block grad-brand text-white text-center py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-500/30">提交答案</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3.2 答对反馈 -->
+  <div class="screen-wrap">
+    <div class="screen-title">3.2 答对反馈 + 解析</div>
+    <div id="screen-staff-quiz-correct" class="screen">
+      <div class="capsule"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="status-bar"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+      <div class="nav-bar">
+        <a href="#screen-staff-quiz"><i class="ri-close-line text-xl"></i></a>
+        <span class="title">题目挑战</span>
+        <span class="text-sm text-[var(--brand)] font-semibold">3/5</span>
+      </div>
+      <div class="px-5">
+        <div class="h-1.5 bg-[var(--line)] rounded-full overflow-hidden"><div class="h-full grad-brand rounded-full" style="width: 60%"></div></div>
+      </div>
+      <div class="scroll px-5 pt-5 pb-4">
+        <div class="grad-green rounded-2xl p-5 text-white relative overflow-hidden">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-white/25 flex items-center justify-center"><i class="ri-checkbox-circle-fill text-3xl"></i></div>
+            <div>
+              <div class="text-lg font-bold">回答正确！</div>
+              <div class="text-xs opacity-90 mt-0.5">恭喜获得 +10 活力值</div>
+            </div>
+          </div>
+          <i class="ri-medal-2-line text-7xl absolute right-2 -bottom-2 opacity-20"></i>
+        </div>
+        <h2 class="mt-5 text-sm font-semibold leading-relaxed text-[var(--ink-2)]">
+          关于金纳多® 银杏叶提取物 EGb 761，下列哪项作用机制描述最准确？
+        </h2>
+        <div class="mt-3 space-y-2">
+          <div class="flex items-center gap-3 p-3 rounded-xl border border-[var(--line)] bg-white opacity-60">
+            <div class="w-6 h-6 rounded-full border border-[var(--ink-3)] text-xs flex items-center justify-center">A</div>
+            <span class="text-sm">仅作为单纯抗血小板药物使用</span>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-[var(--green-soft)] border border-[var(--green)]">
+            <div class="w-6 h-6 rounded-full bg-[var(--green)] text-white text-xs flex items-center justify-center font-semibold">B</div>
+            <span class="text-sm font-medium text-[var(--green)]">多靶点协同改善脑微循环</span>
+            <i class="ri-check-line ml-auto text-[var(--green)]"></i>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-xl border border-[var(--line)] bg-white opacity-60">
+            <div class="w-6 h-6 rounded-full border border-[var(--ink-3)] text-xs flex items-center justify-center">C</div>
+            <span class="text-sm">直接作用于神经递质受体</span>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-xl border border-[var(--line)] bg-white opacity-60">
+            <div class="w-6 h-6 rounded-full border border-[var(--ink-3)] text-xs flex items-center justify-center">D</div>
+            <span class="text-sm">通过降低血压改善脑供血</span>
+          </div>
+        </div>
+        <div class="mt-5 bg-[var(--brand-light)] rounded-xl p-4">
+          <div class="flex items-center gap-2 text-[var(--brand)] font-semibold text-sm mb-2"><i class="ri-lightbulb-flash-fill"></i> 解析</div>
+          <p class="text-xs text-[var(--ink-2)] leading-6">
+            金纳多® 的活性成分银杏叶提取物 EGb 761 通过<span class="text-[var(--brand)] font-medium">扩张脑血管、抑制血小板活化因子（PAF）、清除自由基、改善神经元能量代谢</span>等多靶点协同作用，从而改善脑微循环和认知功能。
+          </p>
+        </div>
+      </div>
+      <div class="px-5 pb-8 pt-2 flex gap-3">
+        <button class="flex-1 py-3.5 rounded-xl border border-[var(--line)] text-center text-sm font-medium text-[var(--ink-2)]"><i class="ri-star-line"></i> 收藏</button>
+        <a href="#screen-staff-quiz-result" class="flex-[2] grad-brand text-white text-center py-3.5 rounded-xl font-semibold shadow-md shadow-blue-500/30">下一题 ›</a>
+      </div>
+    </div>
+  </div>
+  <!-- 3.4 答题结算 -->
+  <div class="screen-wrap">
+    <div class="screen-title">3.4 答题结算</div>
+    <div id="screen-staff-quiz-result" class="screen">
+      <div class="capsule capsule-light"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="grad-brand pt-0 pb-6 text-white text-center relative overflow-hidden">
+        <div style="position:absolute;left:-30px;top:-30px;width:120px;height:120px;background:rgba(255,255,255,0.08);border-radius:50%;"></div>
+        <div style="position:absolute;right:-30px;bottom:-50px;width:160px;height:160px;background:rgba(255,255,255,0.08);border-radius:50%;"></div>
+        <div class="status-bar text-white"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+        <div class="nav-bar text-white"><a href="#screen-staff-home" class="text-white"><i class="ri-close-line text-xl"></i></a><span class="title text-white">挑战完成</span><span></span></div>
+        <i class="ri-trophy-fill text-5xl text-[var(--gold)] mt-4"></i>
+        <div class="text-xl font-bold mt-2">表现优秀！</div>
+        <div class="text-xs opacity-90 mt-0.5">本次答对 4 / 5 题</div>
+        <div class="text-3xl font-extrabold mt-2 text-[var(--gold)]">+40</div>
+        <div class="text-[11px] opacity-90 pb-2">活力值已发放</div>
+      </div>
+      <div class="px-5 mt-5">
+        <div class="bg-white rounded-2xl shadow-md shadow-blue-100 p-4 grid grid-cols-3 text-center">
+          <div>
+            <div class="text-2xl font-bold text-[var(--green)]">4</div>
+            <div class="text-xs text-[var(--ink-3)] mt-1">答对</div>
+          </div>
+          <div class="border-x border-[var(--line)]">
+            <div class="text-2xl font-bold text-[var(--accent)]">1</div>
+            <div class="text-xs text-[var(--ink-3)] mt-1">答错</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-[var(--brand)]">2:45</div>
+            <div class="text-xs text-[var(--ink-3)] mt-1">用时</div>
+          </div>
+        </div>
+      </div>
+      <div class="flex-1"></div>
+      <div class="px-5 pb-8 pt-4 flex gap-3">
+        <a href="#screen-staff-wrong" class="flex-1 py-3.5 rounded-xl border border-[var(--line)] text-center text-sm font-medium text-[var(--ink-2)]">查看错题</a>
+        <a href="#screen-staff-list" class="flex-[2] grad-brand text-white text-center py-3.5 rounded-xl font-semibold">继续学习</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ 分组 5：排行榜 ============ -->
+<div id="group-staff-rank" class="group-title">
+  <h2>④ 排行榜</h2><div class="line"></div><span class="meta">个人/门店/区域三榜</span>
+</div>
+<div class="wall">
+
+  <!-- 5.1 排行榜 -->
+  <div class="screen-wrap">
+    <div class="screen-title">5.1 排行榜（三榜切换）</div>
+    <div id="screen-staff-rank" class="screen">
+      <div class="capsule capsule-light"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="grad-brand pt-0 pb-12 text-white relative" style="border-radius:0 0 24px 24px;">
+        <div class="status-bar text-white"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+        <div class="nav-bar text-white px-5"><span></span><span class="title text-white">排行榜</span><i class="ri-question-line text-xl"></i></div>
+        <!-- segmented -->
+        <div class="px-5 mt-2">
+          <div class="bg-white/15 backdrop-blur rounded-full p-1 flex">
+            <button class="flex-1 py-1.5 text-sm font-semibold bg-white text-[var(--brand)] rounded-full">个人榜</button>
+            <button class="flex-1 py-1.5 text-sm">门店榜</button>
+            <button class="flex-1 py-1.5 text-sm">区域榜</button>
+          </div>
+        </div>
+        <!-- period -->
+        <div class="px-5 mt-3 flex justify-between items-center text-xs">
+          <div class="flex gap-3 opacity-90">
+            <span class="font-semibold border-b border-white pb-0.5">本周</span>
+            <span class="opacity-70">本月</span>
+            <span class="opacity-70">总榜</span>
+          </div>
+          <span class="opacity-70">2026.04.27 - 05.03</span>
+        </div>
+        <!-- top 3 podium -->
+        <div class="mt-4 flex items-end justify-center gap-3 px-5">
+          <!-- 2nd -->
+          <div class="flex-1 flex flex-col items-center">
+            <div class="relative">
+              <div class="w-12 h-12 rounded-full bg-white p-0.5"><div class="w-full h-full rounded-full bg-gradient-to-br from-[#A8B6CF] to-[#6B7488] flex items-center justify-center font-bold text-white text-sm">陈</div></div>
+              <i class="ri-vip-crown-fill absolute -top-2.5 left-1/2 -translate-x-1/2 text-[#C0C7D6] text-xl"></i>
+            </div>
+            <div class="text-xs font-semibold mt-1.5">陈丽</div>
+            <div class="text-[var(--gold)] text-xs font-bold">3,420</div>
+            <div class="w-full mt-1.5 bg-white/20 backdrop-blur rounded-t-xl h-9 flex items-center justify-center text-base font-bold">2</div>
+          </div>
+          <!-- 1st -->
+          <div class="flex-1 flex flex-col items-center">
+            <div class="relative">
+              <div class="w-14 h-14 rounded-full bg-white p-0.5"><div class="w-full h-full rounded-full grad-gold flex items-center justify-center font-bold text-white">赵</div></div>
+              <i class="ri-vip-crown-fill absolute -top-3 left-1/2 -translate-x-1/2 text-[var(--gold)] text-2xl"></i>
+            </div>
+            <div class="text-sm font-semibold mt-1.5">赵敏</div>
+            <div class="text-[var(--gold)] text-sm font-bold">4,180</div>
+            <div class="w-full mt-1.5 grad-gold rounded-t-xl h-12 flex items-center justify-center text-xl font-bold text-white">1</div>
+          </div>
+          <!-- 3rd -->
+          <div class="flex-1 flex flex-col items-center">
+            <div class="relative">
+              <div class="w-12 h-12 rounded-full bg-white p-0.5"><div class="w-full h-full rounded-full bg-gradient-to-br from-[#FFB07C] to-[#C97740] flex items-center justify-center font-bold text-white text-sm">李</div></div>
+              <i class="ri-vip-crown-fill absolute -top-2.5 left-1/2 -translate-x-1/2 text-[#FFB07C] text-xl"></i>
+            </div>
+            <div class="text-xs font-semibold mt-1.5">李娟（你）</div>
+            <div class="text-[var(--gold)] text-xs font-bold">2,860</div>
+            <div class="w-full mt-1.5 bg-white/20 backdrop-blur rounded-t-xl h-7 flex items-center justify-center text-sm font-bold">3</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- list -->
+      <div class="scroll px-5 -mt-8 pb-32">        <div class="bg-white rounded-2xl shadow-md shadow-blue-100 overflow-hidden">
+          <div class="flex items-center gap-3 px-4 py-3 border-b border-[var(--line)]">
+            <span class="w-7 text-center font-bold text-[var(--ink-3)]">4</span>
+            <div class="w-9 h-9 rounded-full bg-[var(--brand-light)] flex items-center justify-center text-[var(--brand)] text-xs font-semibold">王</div>
+            <div class="flex-1">
+              <div class="text-sm font-medium">王芳</div>
+              <div class="text-xs text-[var(--ink-3)]">国大药房 · 张江高科店</div>
+            </div>
+            <div class="text-sm font-bold text-[var(--accent)]">2,540</div>
+          </div>
+          <div class="flex items-center gap-3 px-4 py-3 border-b border-[var(--line)]">
+            <span class="w-7 text-center font-bold text-[var(--ink-3)]">5</span>
+            <div class="w-9 h-9 rounded-full bg-[var(--brand-light)] flex items-center justify-center text-[var(--brand)] text-xs font-semibold">刘</div>
+            <div class="flex-1">
+              <div class="text-sm font-medium">刘洋</div>
+              <div class="text-xs text-[var(--ink-3)]">国大药房 · 浦东大道店</div>
+            </div>
+            <div class="text-sm font-bold text-[var(--accent)]">2,320</div>
+          </div>
+          <div class="flex items-center gap-3 px-4 py-3 border-b border-[var(--line)]">
+            <span class="w-7 text-center font-bold text-[var(--ink-3)]">6</span>
+            <div class="w-9 h-9 rounded-full bg-[var(--brand-light)] flex items-center justify-center text-[var(--brand)] text-xs font-semibold">孙</div>
+            <div class="flex-1">
+              <div class="text-sm font-medium">孙佳</div>
+              <div class="text-xs text-[var(--ink-3)]">国大药房 · 陆家嘴店</div>
+            </div>
+            <div class="text-sm font-bold text-[var(--accent)]">2,180</div>
+          </div>
+          <div class="flex items-center gap-3 px-4 py-3">
+            <span class="w-7 text-center font-bold text-[var(--ink-3)]">7</span>
+            <div class="w-9 h-9 rounded-full bg-[var(--brand-light)] flex items-center justify-center text-[var(--brand)] text-xs font-semibold">周</div>
+            <div class="flex-1">
+              <div class="text-sm font-medium">周小芸</div>
+              <div class="text-xs text-[var(--ink-3)]">国大药房 · 张江高科店</div>
+            </div>
+            <div class="text-sm font-bold text-[var(--accent)]">2,050</div>
+          </div>
+        </div>
+
+        <!-- challenge banner -->
+        <div class="h-4"></div>
+      </div>
+      <!-- floating self -->
+      <div class="absolute bottom-[80px] left-5 right-5 bg-[var(--ink)] text-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-xl">
+        <span class="w-7 text-center font-bold text-[var(--gold)]">3</span>
+        <div class="w-9 h-9 rounded-full grad-warm flex items-center justify-center text-xs font-semibold">李</div>
+        <div class="flex-1">
+          <div class="text-sm font-medium">李娟（你）</div>
+          <div class="text-xs opacity-70">距上一名还差 560 分</div>
+        </div>
+        <div class="text-sm font-bold text-[var(--gold)]">2,860</div>
+      </div>
+      <div class="tab-bar">
+        <a href="#screen-staff-home" class="item"><i class="ri-home-5-line"></i><span>首页</span></a>
+        <a href="#screen-staff-rank" class="item active"><i class="ri-trophy-fill"></i><span>排行榜</span></a>
+        <a href="#screen-staff-me" class="item"><i class="ri-user-3-line"></i><span>我的</span></a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ 分组 7：个人中心 ============ -->
+<div id="group-staff-me" class="group-title">
+  <h2>⑤ 个人中心</h2><div class="line"></div><span class="meta">主页 · 活力值明细 · 学习记录 · 收藏 · 错题集 · 设置</span>
+</div>
+<div class="wall">
+
+  <!-- 7.1 个人中心 -->
+  <div class="screen-wrap">
+    <div class="screen-title">7.1 个人中心（店员）</div>
+    <div id="screen-staff-me" class="screen" style="background:linear-gradient(180deg,#DCEBFF 0%, #EFF4FA 240px, var(--bg) 340px);">
+      <div class="capsule"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="scroll">
+        <div class="status-bar"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+        <!-- 标题栏 -->
+        <div class="nav-bar px-5"><span class="title">个人中心</span><span></span></div>
+        <!-- 店员个人信息，点击前往完善信息页 -->
+        <a href="#screen-staff-profile-edit" class="block px-5 pt-4 pb-4">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center text-2xl font-bold text-[var(--brand)] flex-shrink-0">李</div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-xl font-bold text-[var(--ink)]">李娟</span>
+                <span class="chip" style="background:var(--brand-light);color:var(--brand);font-weight:600;">执业药师</span>
+              </div>
+              <div class="text-sm text-[var(--ink-2)] mt-1.5">国大药房 · 张江高科店</div>
+            </div>
+            <i class="ri-arrow-right-s-line text-2xl text-[var(--ink-3)] flex-shrink-0"></i>
+          </div>
+        </a>
+
+        <!-- 个人活力值 -->
+        <div class="px-5">
+          <a href="#screen-staff-points" class="block grad-green rounded-2xl p-5 text-white relative overflow-hidden">
+            <div style="position:absolute;right:-20px;bottom:-30px;width:120px;height:120px;background:rgba(255,255,255,0.12);border-radius:50%;"></div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1.5 text-sm opacity-95"><i class="ri-medal-line"></i> 可用活力值</div>
+              <span class="bg-white/25 backdrop-blur rounded-full px-3 py-1 text-xs">活力值流水 ›</span>
+            </div>
+            <div class="flex items-baseline gap-1 mt-2">
+              <span class="text-4xl font-extrabold">1,250</span>
+            </div>
+          </a>
+        </div>
+
+        <!-- 金刚区：我的收藏 / 我的点赞 / 学习记录 / 错题集 -->
+        <div class="px-5 mt-4">
+          <div class="bg-white rounded-2xl shadow-sm p-4 grid grid-cols-4 gap-2 text-center">
+            <a href="#screen-staff-fav" class="flex flex-col items-center gap-2">
+              <div class="w-12 h-12 rounded-full bg-[var(--gold-soft)] flex items-center justify-center"><i class="ri-bookmark-line text-xl text-[var(--gold)]"></i></div>
+              <span class="text-xs text-[var(--ink-2)]">我的收藏</span>
+            </a>
+            <a href="#screen-staff-like" class="flex flex-col items-center gap-2">
+              <div class="w-12 h-12 rounded-full bg-[#FFE9E5] flex items-center justify-center"><i class="ri-thumb-up-line text-xl text-[#F5468C]"></i></div>
+              <span class="text-xs text-[var(--ink-2)]">我的点赞</span>
+            </a>
+            <a href="#screen-staff-study" class="flex flex-col items-center gap-2">
+              <div class="w-12 h-12 rounded-full bg-[var(--brand-light)] flex items-center justify-center"><i class="ri-history-line text-xl text-[var(--brand)]"></i></div>
+              <span class="text-xs text-[var(--ink-2)]">学习记录</span>
+            </a>
+            <a href="#screen-staff-wrong" class="flex flex-col items-center gap-2">
+              <div class="w-12 h-12 rounded-full bg-[#F0EAFF] flex items-center justify-center"><i class="ri-file-list-3-line text-xl text-[#7E5BEF]"></i></div>
+              <span class="text-xs text-[var(--ink-2)]">错题集</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 隐私协议 -->
+        <div class="px-5 mt-4">
+          <div class="bg-white rounded-2xl py-1 px-4">
+            <div class="flex items-center gap-3 py-3.5">
+              <i class="ri-shield-check-line text-lg text-[var(--ink-2)]"></i>
+              <span class="flex-1 text-sm">隐私协议</span>
+              <i class="ri-arrow-right-s-line text-[var(--ink-3)]"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- 退出登录 -->
+        <div class="px-5 mt-4">
+          <button class="w-full bg-white rounded-2xl py-3.5 text-[var(--accent)] font-medium text-sm">退出登录</button>
+        </div>
+        <div class="h-4"></div>
+      </div>
+      <div class="tab-bar">
+        <a href="#screen-staff-home" class="item"><i class="ri-home-5-line"></i><span>首页</span></a>
+        <a href="#screen-staff-rank" class="item"><i class="ri-trophy-line"></i><span>排行榜</span></a>
+        <a href="#screen-staff-me" class="item active"><i class="ri-user-3-fill"></i><span>我的</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7.1.1 信息修改（含审核状态） -->
+  <div class="screen-wrap">
+    <div class="screen-title">7.1.1 信息修改（审核状态）</div>
+    <div id="screen-staff-profile-edit" class="screen">
+      <div class="capsule"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="status-bar"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+      <div class="nav-bar"><a href="#screen-staff-me"><i class="ri-arrow-left-line text-xl"></i></a><span class="title">信息修改</span><span></span></div>
+      <!-- 审核状态 banner（示意：审核未通过 + 原因） -->
+      <div class="px-6 pt-1 pb-2">
+        <div class="rounded-xl p-3.5 flex items-start gap-3" style="background:var(--accent-soft);">
+          <i class="ri-close-circle-fill text-xl text-[var(--accent)] mt-0.5"></i>
+          <div class="flex-1">
+            <div class="text-sm font-semibold text-[var(--accent)]">审核未通过</div>
+            <div class="text-xs text-[var(--ink-2)] mt-1 leading-5">未通过原因：工牌照片信息不清晰，门店名称无法辨认，请重新上传后提交。</div>
+          </div>
+        </div>
+        <!-- 其他状态示意（灰显参考）
+        审核中：<span style="color:var(--brand)">审核中</span>
+        审核通过：<span style="color:var(--green)">审核通过</span> -->
+      </div>
+      <div class="px-6 flex items-center justify-between pb-1">
+        <span class="text-xs text-[var(--ink-3)]">当前信息（审核不通过，可编辑后重新提交）</span>
+        <button class="chip" style="background:var(--brand-light);color:var(--brand);font-weight:600;padding:4px 12px;"><i class="ri-edit-line"></i> 编辑</button>
+      </div>
+      <div class="px-6 flex-1 scroll pt-1">
+        <div class="space-y-5">
+          <div>
+            <label class="text-xs text-[var(--ink-3)]">姓名 <span class="text-red-500">*</span></label>
+            <input class="w-full mt-2 pb-2 border-b border-[var(--line)] outline-none text-base" value="李娟" />
+          </div>
+          <div>
+            <label class="text-xs text-[var(--ink-3)]">职位</label>
+            <div class="flex gap-2 mt-2">
+              <button class="flex-1 py-2 rounded-lg border-2 border-[var(--brand)] text-[var(--brand)] text-sm font-medium bg-[var(--brand-light)]">店员</button>
+              <button class="flex-1 py-2 rounded-lg border border-[var(--line)] text-[var(--ink-2)] text-sm">执业药师</button>
+            </div>
+          </div>
+          <div>
+            <label class="text-xs text-[var(--ink-3)]">所属省/市 <span class="text-red-500">*</span></label>
+            <div class="mt-2 pb-2 border-b border-[var(--line)] flex justify-between items-center">
+              <span class="text-base">上海市 / 上海市</span>
+              <i class="ri-arrow-down-s-line text-[var(--ink-3)]"></i>
+            </div>
+          </div>
+          <div>
+            <label class="text-xs text-[var(--ink-3)]">所属门店 <span class="text-red-500">*</span></label>
+            <div class="mt-2 pb-2 border-b border-[var(--line)] flex justify-between items-center">
+              <span class="text-base">国大药房 · 张江高科店</span>
+              <i class="ri-arrow-right-s-line text-[var(--ink-3)]"></i>
+            </div>
+          </div>
+          <!-- 岗位证明上传 -->
+          <div>
+            <label class="text-xs text-[var(--ink-3)]">岗位证明 <span class="text-red-500">*</span></label>
+            <div class="mt-2 grid grid-cols-2 gap-3">
+              <div>
+                <div class="aspect-[4/3] rounded-xl bg-gradient-to-br from-[#FFE9E5] to-[#FFC9BE] relative overflow-hidden flex flex-col items-center justify-center gap-1 text-[var(--accent)] border-2 border-[var(--accent)]/50">
+                  <i class="ri-error-warning-fill text-3xl"></i>
+                  <span class="text-[10px] font-medium">需重新上传</span>
+                </div>
+                <div class="text-[11px] text-[var(--ink-2)] text-center mt-1.5">工牌照片 <span class="text-red-500">*</span></div>
+              </div>
+              <div>
+                <a href="#sheet-photo-source" class="w-full aspect-[4/3] rounded-xl border-2 border-dashed border-[var(--brand)]/40 bg-[var(--brand-light)]/50 flex flex-col items-center justify-center gap-1 text-[var(--brand)]">
+                  <i class="ri-upload-cloud-2-line text-3xl"></i>
+                  <span class="text-[11px] font-medium">点击上传</span>
+                </a>
+                <div class="text-[11px] text-[var(--ink-2)] text-center mt-1.5">执业证照 <span class="text-[var(--accent)] font-medium">（执业药师）</span></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="text-xs text-[var(--ink-3)]">手机号 <span class="text-red-500">*</span></label>
+            <div class="mt-2 pb-2 border-b border-[var(--line)] flex justify-between items-center">
+              <span class="text-base">138****1234</span>
+              <button class="chip" style="background:var(--brand-light);color:var(--brand);font-weight:600;padding:4px 12px;"><i class="ri-phone-line"></i> 重新获取</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="px-6 pb-8 pt-4">
+        <a href="#screen-staff-me" class="block grad-brand text-white text-center py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-500/30">提交修改</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7.2 活力值明细 -->
+  <div class="screen-wrap">
+    <div class="screen-title">7.2 活力值明细</div>
+    <div id="screen-staff-points" class="screen">
+      <div class="capsule capsule-light"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="grad-warm pt-0 pb-6 text-white relative">
+        <div class="status-bar text-white"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+        <div class="nav-bar text-white px-5"><a class="text-white" href="#screen-staff-me"><i class="ri-arrow-left-line text-xl"></i></a><span class="title text-white">活力值明细</span><i class="ri-question-line text-xl"></i></div>
+        <div class="px-5 mt-1">
+          <div class="text-xs opacity-90">当前活力值</div>
+          <div class="text-3xl font-extrabold mt-0.5">1,250</div>
+          <div class="mt-2 flex gap-2 text-[11px]">
+            <div class="bg-white/20 rounded-full px-2.5 py-1"><i class="ri-arrow-up-line text-[var(--gold)]"></i> 累计获得 2,750</div>
+            <div class="bg-white/20 rounded-full px-2.5 py-1"><i class="ri-arrow-down-line"></i> 累计过期 1,500</div>
+          </div>
+        </div>
+      </div>
+      <div class="px-5 mt-3">
+        <div class="bg-white rounded-2xl shadow-md shadow-orange-100 p-1 flex" data-points-tabs>
+          <button class="flex-1 py-2 text-sm font-semibold bg-[var(--accent-soft)] text-[var(--accent)] rounded-xl" data-filter="all" onclick="pointsFilter(this,'all')">全部</button>
+          <button class="flex-1 py-2 text-sm text-[var(--ink-2)] rounded-xl" data-filter="gain" onclick="pointsFilter(this,'gain')">获得</button>
+          <button class="flex-1 py-2 text-sm text-[var(--ink-2)] rounded-xl" data-filter="spend" onclick="pointsFilter(this,'spend')">消耗</button>
+        </div>
+      </div>
+      <div class="scroll px-5 pt-4 pb-4" data-points-list>
+        <div class="text-xs text-[var(--ink-3)] mb-2" data-day="today">今天</div>
+        <div class="bg-white rounded-2xl divide-y divide-[var(--line)]" data-day-group="today">
+          <div class="p-3.5 flex items-center gap-3" data-type="gain">
+            <div class="w-9 h-9 rounded-full bg-[var(--green-soft)] flex items-center justify-center"><i class="ri-checkbox-multiple-line text-[var(--green)]"></i></div>
+            <div class="flex-1">
+              <div class="text-sm font-medium">完成答题挑战</div>
+              <div class="text-xs text-[var(--ink-3)] mt-0.5">答对 5/5 · 09:42</div>
+            </div>
+            <span class="text-[var(--green)] font-semibold text-sm">+ 40</span>
+          </div>
+          <div class="p-3.5 flex items-center gap-3" data-type="gain">
+            <div class="w-9 h-9 rounded-full bg-[var(--green-soft)] flex items-center justify-center"><i class="ri-mic-line text-[var(--green)]"></i></div>
+            <div class="flex-1">
+              <div class="text-sm font-medium">开口说练习</div>
+              <div class="text-xs text-[var(--ink-3)] mt-0.5">09:20</div>
+            </div>
+            <span class="text-[var(--green)] font-semibold text-sm">+ 20</span>
+          </div>
+          <div class="p-3.5 flex items-center gap-3" data-type="gain">
+            <div class="w-9 h-9 rounded-full bg-[var(--brand-light)] flex items-center justify-center"><i class="ri-book-read-line text-[var(--brand)]"></i></div>
+            <div class="flex-1">
+              <div class="text-sm font-medium">观看学习内容</div>
+              <div class="text-xs text-[var(--ink-3)] mt-0.5">图文 · 09:05</div>
+            </div>
+            <span class="text-[var(--green)] font-semibold text-sm">+ 10</span>
+          </div>
+          <div class="p-3.5 flex items-center gap-3" data-type="gain">
+            <div class="w-9 h-9 rounded-full bg-[var(--brand-light)] flex items-center justify-center"><i class="ri-calendar-check-line text-[var(--brand)]"></i></div>
+            <div class="flex-1">
+              <div class="text-sm font-medium">每日签到</div>
+              <div class="text-xs text-[var(--ink-3)] mt-0.5">连续签到第 6 天 · 08:30</div>
+            </div>
+            <span class="text-[var(--green)] font-semibold text-sm">+ 5</span>
+          </div>
+        </div>
+        <div class="text-xs text-[var(--ink-3)] mb-2 mt-4" data-day="yesterday">昨天</div>
+        <div class="bg-white rounded-2xl divide-y divide-[var(--line)]" data-day-group="yesterday">
+          <div class="p-3.5 flex items-center gap-3" data-type="spend">
+            <div class="w-9 h-9 rounded-full bg-[var(--accent-soft)] flex items-center justify-center"><i class="ri-time-line text-[var(--accent)]"></i></div>
+            <div class="flex-1">
+              <div class="text-sm font-medium">活力值过期</div>
+              <div class="text-xs text-[var(--ink-3)] mt-0.5">有效期截止 · 23:59</div>
+            </div>
+            <span class="text-[var(--accent)] font-semibold text-sm">- 200</span>
+          </div>
+          <div class="p-3.5 flex items-center gap-3" data-type="gain">
+            <div class="w-9 h-9 rounded-full bg-[var(--green-soft)] flex items-center justify-center"><i class="ri-book-read-line text-[var(--green)]"></i></div>
+            <div class="flex-1">
+              <div class="text-sm font-medium">观看学习内容</div>
+              <div class="text-xs text-[var(--ink-3)] mt-0.5">视频 · 20:15</div>
+            </div>
+            <span class="text-[var(--green)] font-semibold text-sm">+ 10</span>
+          </div>
+          <div class="p-3.5 flex items-center gap-3" data-type="gain">
+            <div class="w-9 h-9 rounded-full bg-[var(--gold-soft)] flex items-center justify-center"><i class="ri-checkbox-multiple-line text-[var(--gold)]"></i></div>
+            <div class="flex-1">
+              <div class="text-sm font-medium">完成答题挑战</div>
+              <div class="text-xs text-[var(--ink-3)] mt-0.5">答对 4/5 · 19:42</div>
+            </div>
+            <span class="text-[var(--green)] font-semibold text-sm">+ 50</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 7.4 学习记录主页 -->
+  <div class="screen-wrap">
+    <div class="screen-title">7.4 学习记录</div>
+    <div id="screen-staff-study" class="screen">
+      <div class="capsule"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="status-bar"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+      <div class="nav-bar"><a href="#screen-staff-me"><i class="ri-arrow-left-line text-xl"></i></a><span class="title">学习记录</span><span></span></div>
+
+      <!-- 分类筛选：图文 / 视频 / 题目 / 开口说 -->
+      <div class="px-5 pt-1 flex gap-2 text-xs overflow-x-auto pb-1" style="scrollbar-width:none;">
+        <button class="px-3 py-1.5 rounded-full bg-[var(--brand)] text-white whitespace-nowrap">全部</button>
+        <button class="px-3 py-1.5 rounded-full bg-white text-[var(--ink-2)] border border-[var(--line)] whitespace-nowrap">图文</button>
+        <button class="px-3 py-1.5 rounded-full bg-white text-[var(--ink-2)] border border-[var(--line)] whitespace-nowrap">视频</button>
+        <button class="px-3 py-1.5 rounded-full bg-white text-[var(--ink-2)] border border-[var(--line)] whitespace-nowrap">题目</button>
+        <button class="px-3 py-1.5 rounded-full bg-white text-[var(--ink-2)] border border-[var(--line)] whitespace-nowrap">开口说</button>
+      </div>
+
+      <!-- 明细列表（按时间倒序，仅内容 + 类型） -->
+      <div class="scroll px-5 pt-3 pb-4">
+        <div class="text-xs text-[var(--ink-3)] mb-2">今天</div>
+        <div class="bg-white rounded-2xl divide-y divide-[var(--line)]">
+          <a href="#screen-staff-detail" class="p-3.5 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-[var(--brand-light)] flex items-center justify-center"><i class="ri-play-circle-line text-[var(--brand)]"></i></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium truncate">脑供血不足循证用药专家共识</div>
+              <span class="chip text-[10px] mt-1" style="background:#E8F1FF;color:var(--brand);">视频</span>
+            </div>
+            <i class="ri-arrow-right-s-line text-[var(--ink-3)]"></i>
+          </a>
+          <a href="#screen-staff-detail" class="p-3.5 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-[var(--gold-soft)] flex items-center justify-center"><i class="ri-article-line text-[var(--gold)]"></i></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium truncate">EGb 761 多靶点机制深度解读</div>
+              <span class="chip text-[10px] mt-1" style="background:#FFE9E5;color:#F5468C;">图文</span>
+            </div>
+            <i class="ri-arrow-right-s-line text-[var(--ink-3)]"></i>
+          </a>
+          <a href="#screen-staff-detail" class="p-3.5 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center"><i class="ri-question-answer-line text-[var(--accent)]"></i></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium truncate">长期服药老顾客沟通 · 单选题</div>
+              <span class="chip text-[10px] mt-1" style="background:var(--accent-soft);color:var(--accent);">题目</span>
+            </div>
+            <i class="ri-arrow-right-s-line text-[var(--ink-3)]"></i>
+          </a>
+        </div>
+
+        <div class="text-xs text-[var(--ink-3)] mb-2 mt-4">昨天</div>
+        <div class="bg-white rounded-2xl divide-y divide-[var(--line)]">
+          <a href="#screen-staff-detail" class="p-3.5 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-[var(--green-soft)] flex items-center justify-center"><i class="ri-mic-line text-[var(--green)]"></i></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium truncate">门店推荐话术 · 老人客群</div>
+              <span class="chip text-[10px] mt-1" style="background:var(--green-soft);color:var(--green);">开口说</span>
+            </div>
+            <i class="ri-arrow-right-s-line text-[var(--ink-3)]"></i>
+          </a>
+          <a href="#screen-staff-detail" class="p-3.5 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-[var(--brand-light)] flex items-center justify-center"><i class="ri-play-circle-line text-[var(--brand)]"></i></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium truncate">头晕症状的临床鉴别</div>
+              <span class="chip text-[10px] mt-1" style="background:#E8F1FF;color:var(--brand);">视频</span>
+            </div>
+            <i class="ri-arrow-right-s-line text-[var(--ink-3)]"></i>
+          </a>
+        </div>
+
+        <div class="text-xs text-[var(--ink-3)] mb-2 mt-4">2026-04-26</div>
+        <div class="bg-white rounded-2xl divide-y divide-[var(--line)]">
+          <a href="#screen-staff-detail" class="p-3.5 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-[var(--gold-soft)] flex items-center justify-center"><i class="ri-article-line text-[var(--gold)]"></i></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium truncate">银杏叶提取物 vs 同类产品横评</div>
+              <span class="chip text-[10px] mt-1" style="background:#FFE9E5;color:#F5468C;">图文</span>
+            </div>
+            <i class="ri-arrow-right-s-line text-[var(--ink-3)]"></i>
+          </a>
+          <a href="#screen-staff-detail" class="p-3.5 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center"><i class="ri-question-answer-line text-[var(--accent)]"></i></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium truncate">脑卒中风险识别 · 判断题</div>
+              <span class="chip text-[10px] mt-1" style="background:var(--accent-soft);color:var(--accent);">题目</span>
+            </div>
+            <i class="ri-arrow-right-s-line text-[var(--ink-3)]"></i>
+          </a>
+        </div>
+
+        <div class="text-center text-[11px] text-[var(--ink-3)] mt-5">查看更早记录</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7.5 我的收藏（左滑操作） -->
+  <div class="screen-wrap">
+    <div class="screen-title">7.5 我的收藏（左滑取消）</div>
+    <div id="screen-staff-fav" class="screen">
+      <div class="capsule"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="status-bar"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+      <div class="nav-bar">
+        <a href="#screen-staff-me"><i class="ri-arrow-left-line text-xl"></i></a>
+        <span class="title">我的收藏</span>
+        <span></span>
+      </div>
+      <!-- 分类：图文 / 视频 / 题目 / 开口说 -->
+      <div class="px-5 pt-1 pb-3">
+        <div class="flex gap-2 overflow-x-auto" style="scrollbar-width:none;">
+          <button class="px-3 py-1 rounded-full bg-[var(--brand)] text-white text-xs whitespace-nowrap">全部 (12)</button>
+          <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">图文 (5)</button>
+          <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">视频 (3)</button>
+          <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">题目 (2)</button>
+          <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">开口说 (2)</button>
+        </div>
+      </div>
+      <div class="scroll px-5 pb-4 space-y-3">
+        <div class="text-[10px] text-[var(--ink-3)] text-center pb-1">← 左滑单条内容可取消收藏</div>
+        <div class="swipe-wrap">
+          <div class="swipe-actions">
+            <button class="act-cancel" onclick="event.stopPropagation();this.closest('.swipe-wrap').querySelector('.swipe-row').classList.remove('open')">取消</button>
+            <button class="act-remove">取消收藏</button>
+          </div>
+          <div class="swipe-row open p-3 flex gap-3 items-center" onclick="swipeOpen(this)">
+            <div class="w-14 h-14 rounded-lg bg-[#FFE9E5] flex items-center justify-center text-[#F5468C] flex-shrink-0"><i class="ri-file-text-line text-2xl"></i></div>
+            <div class="flex-1 min-w-0">
+              <span class="chip text-[10px]" style="background:#FFE9E5;color:#F5468C;">图文</span>
+              <div class="text-sm font-semibold leading-snug line-clamp-2 mt-1">2024 版脑供血不足诊疗共识：金纳多临床定位</div>
+              <div class="text-xs text-[var(--ink-3)] mt-1">收藏于 今天</div>
+            </div>
+          </div>
+        </div>
+        <div class="swipe-wrap">
+          <div class="swipe-actions">
+            <button class="act-cancel" onclick="event.stopPropagation();this.closest('.swipe-wrap').querySelector('.swipe-row').classList.remove('open')">取消</button>
+            <button class="act-remove">取消收藏</button>
+          </div>
+          <div class="swipe-row p-3 flex gap-3 items-center" onclick="swipeOpen(this)">
+            <div class="w-14 h-14 rounded-lg bg-gradient-to-br from-[#1F6FEB] to-[#6FA2FF] flex items-center justify-center text-white flex-shrink-0"><i class="ri-play-circle-fill text-2xl"></i></div>
+            <div class="flex-1 min-w-0">
+              <span class="chip text-[10px]" style="background:#E8F1FF;color:var(--brand);">视频</span>
+              <div class="text-sm font-semibold leading-snug line-clamp-2 mt-1">金纳多临床应用：慢性脑供血不足的联合用药策略</div>
+              <div class="text-xs text-[var(--ink-3)] mt-1">收藏于 昨天</div>
+            </div>
+          </div>
+        </div>
+        <div class="swipe-wrap">
+          <div class="swipe-actions">
+            <button class="act-cancel" onclick="event.stopPropagation();this.closest('.swipe-wrap').querySelector('.swipe-row').classList.remove('open')">取消</button>
+            <button class="act-remove">取消收藏</button>
+          </div>
+          <div class="swipe-row p-3 flex gap-3 items-center" onclick="swipeOpen(this)">
+            <div class="w-14 h-14 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center text-[var(--accent)] flex-shrink-0"><i class="ri-question-answer-line text-2xl"></i></div>
+            <div class="flex-1 min-w-0">
+              <span class="chip text-[10px]" style="background:var(--accent-soft);color:var(--accent);">题目</span>
+              <div class="text-sm font-semibold leading-snug line-clamp-2 mt-1">EGb 761 银杏叶提取物作用机制单选题</div>
+              <div class="text-xs text-[var(--ink-3)] mt-1">收藏于 2026-04-25</div>
+            </div>
+          </div>
+        </div>
+        <div class="swipe-wrap">
+          <div class="swipe-actions">
+            <button class="act-cancel" onclick="event.stopPropagation();this.closest('.swipe-wrap').querySelector('.swipe-row').classList.remove('open')">取消</button>
+            <button class="act-remove">取消收藏</button>
+          </div>
+          <div class="swipe-row p-3 flex gap-3 items-center" onclick="swipeOpen(this)">
+            <div class="w-14 h-14 rounded-lg bg-[#E6FAF2] flex items-center justify-center text-[var(--green)] flex-shrink-0"><i class="ri-mic-line text-2xl"></i></div>
+            <div class="flex-1 min-w-0">
+              <span class="chip text-[10px]" style="background:var(--green-soft);color:var(--green);">开口说</span>
+              <div class="text-sm font-semibold leading-snug line-clamp-2 mt-1">长期服药老顾客 · 安全性沟通话术</div>
+              <div class="text-xs text-[var(--ink-3)] mt-1">收藏于 2026-04-20</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7.5.1 我的点赞（左滑操作） -->
+  <div class="screen-wrap">
+    <div class="screen-title">7.5.1 我的点赞（左滑取消）</div>
+    <div id="screen-staff-like" class="screen">
+      <div class="capsule"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="status-bar"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+      <div class="nav-bar">
+        <a href="#screen-staff-me"><i class="ri-arrow-left-line text-xl"></i></a>
+        <span class="title">我的点赞</span>
+        <span></span>
+      </div>
+      <!-- 分类：图文 / 视频 / 题目 / 开口说 -->
+      <div class="px-5 pt-1 pb-3">
+        <div class="flex gap-2 overflow-x-auto" style="scrollbar-width:none;">
+          <button class="px-3 py-1 rounded-full bg-[var(--brand)] text-white text-xs whitespace-nowrap">全部 (9)</button>
+          <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">图文 (4)</button>
+          <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">视频 (3)</button>
+          <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">题目 (1)</button>
+          <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">开口说 (1)</button>
+        </div>
+      </div>
+      <div class="scroll px-5 pb-4 space-y-3">
+        <div class="text-[10px] text-[var(--ink-3)] text-center pb-1">← 左滑单条内容可取消点赞</div>
+        <div class="swipe-wrap">
+          <div class="swipe-actions">
+            <button class="act-cancel" onclick="event.stopPropagation();this.closest('.swipe-wrap').querySelector('.swipe-row').classList.remove('open')">取消</button>
+            <button class="act-remove">取消点赞</button>
+          </div>
+          <div class="swipe-row open p-3 flex gap-3 items-center" onclick="swipeOpen(this)">
+            <div class="w-14 h-14 rounded-lg bg-[#E6FAF2] flex items-center justify-center text-[var(--green)] flex-shrink-0"><i class="ri-capsule-line text-2xl"></i></div>
+            <div class="flex-1 min-w-0">
+              <span class="chip text-[10px]" style="background:#E6FAF2;color:var(--green);">图文</span>
+              <div class="text-sm font-semibold leading-snug line-clamp-2 mt-1">金纳多® 银杏叶提取物 EGb 761 作用机制详解</div>
+              <div class="text-xs text-[var(--ink-3)] mt-1">点赞于 今天</div>
+            </div>
+          </div>
+        </div>
+        <div class="swipe-wrap">
+          <div class="swipe-actions">
+            <button class="act-cancel" onclick="event.stopPropagation();this.closest('.swipe-wrap').querySelector('.swipe-row').classList.remove('open')">取消</button>
+            <button class="act-remove">取消点赞</button>
+          </div>
+          <div class="swipe-row p-3 flex gap-3 items-center" onclick="swipeOpen(this)">
+            <div class="w-14 h-14 rounded-lg bg-gradient-to-br from-[#1F6FEB] to-[#6FA2FF] flex items-center justify-center text-white flex-shrink-0"><i class="ri-play-circle-fill text-2xl"></i></div>
+            <div class="flex-1 min-w-0">
+              <span class="chip text-[10px]" style="background:#E8F1FF;color:var(--brand);">视频</span>
+              <div class="text-sm font-semibold leading-snug line-clamp-2 mt-1">耳鸣眩晕背后的脑供血信号</div>
+              <div class="text-xs text-[var(--ink-3)] mt-1">点赞于 昨天</div>
+            </div>
+          </div>
+        </div>
+        <div class="swipe-wrap">
+          <div class="swipe-actions">
+            <button class="act-cancel" onclick="event.stopPropagation();this.closest('.swipe-wrap').querySelector('.swipe-row').classList.remove('open')">取消</button>
+            <button class="act-remove">取消点赞</button>
+          </div>
+          <div class="swipe-row p-3 flex gap-3 items-center" onclick="swipeOpen(this)">
+            <div class="w-14 h-14 rounded-lg bg-[#FFE9E5] flex items-center justify-center text-[#F5468C] flex-shrink-0"><i class="ri-file-text-line text-2xl"></i></div>
+            <div class="flex-1 min-w-0">
+              <span class="chip text-[10px]" style="background:#FFE9E5;color:#F5468C;">图文</span>
+              <div class="text-sm font-semibold leading-snug line-clamp-2 mt-1">中老年人记忆减退与早期脑供血不足的识别要点</div>
+              <div class="text-xs text-[var(--ink-3)] mt-1">点赞于 2026-04-24</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7.6 错题集 -->
+  <div class="screen-wrap">
+    <div class="screen-title">7.6 错题集</div>
+    <div id="screen-staff-wrong" class="screen">
+      <div class="capsule"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="status-bar"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+      <div class="nav-bar">
+        <a href="#screen-staff-me"><i class="ri-arrow-left-line text-xl"></i></a>
+        <span class="title">错题集</span>
+        <i class="ri-filter-3-line text-xl"></i>
+      </div>
+      <!-- 分类筛选：全部 / 疾病 / 治疗 / 解药 / 预防 / 案例 -->
+      <div class="px-5 pt-1 pb-3">
+        <div class="flex gap-2 overflow-x-auto" style="scrollbar-width:none;">
+          <button class="px-3 py-1 rounded-full bg-[var(--brand)] text-white text-xs whitespace-nowrap">全部 (8)</button>
+          <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">疾病 (3)</button>
+          <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">治疗 (2)</button>
+          <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">解药 (2)</button>
+          <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">预防 (1)</button>
+          <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">案例 (0)</button>
+        </div>
+      </div>
+      <div class="scroll px-5 pb-4 space-y-3">
+        <div class="bg-white rounded-2xl p-4">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2">
+              <span class="chip" style="background:#FFE9E5;color:#F5468C;">疾病</span>
+            </div>
+            <span class="text-xs text-[var(--ink-3)]">今天</span>
+          </div>
+          <div class="text-sm font-medium mt-2 leading-relaxed line-clamp-2">下列哪项不是慢性脑供血不足的常见早期表现？</div>
+          <div class="mt-2 text-xs text-[var(--ink-3)] flex items-center justify-end">
+            <button class="text-[var(--brand)] font-medium">查看解析</button>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-4">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2">
+              <span class="chip" style="background:#E8F1FF;color:var(--brand);">治疗</span>
+            </div>
+            <span class="text-xs text-[var(--ink-3)]">昨天</span>
+          </div>
+          <div class="text-sm font-medium mt-2 leading-relaxed line-clamp-2">金纳多与抗血小板药物联合时，哪条注意事项最关键？</div>
+          <div class="mt-2 text-xs text-[var(--ink-3)] flex items-center justify-end">
+            <button class="text-[var(--brand)] font-medium">查看解析</button>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-4">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2">
+              <span class="chip" style="background:#E6FAF2;color:var(--green);">解药</span>
+            </div>
+            <span class="text-xs text-[var(--ink-3)]">2026-04-23</span>
+          </div>
+          <div class="text-sm font-medium mt-2 leading-relaxed line-clamp-2">金纳多® 片剂的成人推荐用法是？</div>
+          <div class="mt-2 text-xs text-[var(--ink-3)] flex items-center justify-end">
+            <button class="text-[var(--brand)] font-medium">查看解析</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ 分组 8：代表端 ============ -->
+<div id="group-rep" class="group-title">
+  <h2>⑥ 代表端（一线销售）</h2><div class="line"></div><span class="meta">登录 · 个人中心 · 邀请码 · 用户管理</span>
+</div>
+<div class="wall">
+
+  <!-- 8.1 代表登录 -->
+  <div class="screen-wrap">
+    <div class="screen-title">8.1 代表登录（金汇学）</div>
+    <div class="screen grad-brand">
+      <div class="capsule capsule-light"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="status-bar text-white"><span>9:41</span><span class="right text-white"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+      <div class="flex-1 flex flex-col text-white relative overflow-hidden px-8 pt-2 pb-8">
+        <div style="position:absolute; right:-50px; top:20px; width:200px; height:200px; background:rgba(255,255,255,0.08); border-radius:50%;"></div>
+        <div style="position:absolute; left:-40px; bottom:150px; width:150px; height:150px; background:rgba(255,255,255,0.06); border-radius:50%;"></div>
+        <!-- brand -->
+        <div class="flex items-center gap-2 mt-2">
+          <div class="w-9 h-9 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center"><i class="ri-capsule-line text-xl"></i></div>
+          <span class="font-semibold">金汇学 · 代表版</span>
+        </div>
+        <!-- welcome hero -->
+        <div class="flex-1 flex flex-col justify-center relative">
+          <div class="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur flex items-center justify-center mb-6">
+            <i class="ri-graduation-cap-fill text-5xl"></i>
+          </div>
+          <div class="text-sm opacity-80">欢迎来到</div>
+          <h1 class="text-3xl font-bold leading-tight mt-1">金汇学</h1>
+          <p class="text-sm leading-7 opacity-90 mt-5">
+            金汇学旨在打造线上学习平台，整合图文、视频类专业内容，不断夯实专业储备，精进从业服务能力。
+          </p>
+        </div>
+        <!-- 登录按钮组 -->
+        <a id="cta-rep-login" href="#screen-rep-me" class="block bg-[var(--accent)] text-white text-center py-3.5 rounded-full font-semibold shadow-lg opacity-50 pointer-events-none">
+          手机号一键登录
+        </a>
+        <a id="cta-rep-login2" href="#screen-rep-me" class="block mt-3 bg-white/95 text-[var(--ink)] text-center py-3.5 rounded-full font-semibold opacity-50 pointer-events-none">
+          输入手机号码登录 / 注册
+        </a>
+        <!-- 协议勾选（勾选后可登录） -->
+        <label class="flex items-center justify-center gap-2 text-xs opacity-90 mt-4" onclick="setTimeout(function(){toggleAgree('agree-rep',['cta-rep-login','cta-rep-login2'])},0)">
+          <i id="agree-rep" class="ri-checkbox-blank-circle-line text-base" data-checked="0"></i>
+          <span>我已阅读并同意《用户服务协议》和<span class="underline">隐私政策</span></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8.6 代表端 我的 -->
+  <div class="screen-wrap">
+    <div class="screen-title">8.6 代表端 · 我的</div>
+    <div id="screen-rep-me" class="screen" style="background:linear-gradient(180deg,#DCEBFF 0%, #EFF4FA 240px, var(--bg) 340px);">
+      <div class="capsule"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="scroll">
+        <div class="status-bar"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+        <!-- 标题栏 -->
+        <div class="nav-bar px-5"><span class="title">个人中心</span><span></span></div>
+        <!-- 代表个人信息 + 个人邀请码 -->
+        <div class="px-5 pt-4 pb-4">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center text-2xl font-bold text-[var(--brand)] flex-shrink-0">王</div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xl font-bold text-[var(--ink)]">王晓明</span>
+                <a href="#screen-rep-qr" class="flex items-center gap-1 chip flex-shrink-0" style="background:var(--brand-light);color:var(--brand);font-weight:600;"><i class="ri-qr-code-line"></i> 个人邀请码</a>
+              </div>
+              <div class="text-sm text-[var(--ink-2)] mt-1.5">代表：王晓明</div>
+              <div class="text-sm text-[var(--ink-2)] mt-0.5">区域：华东大区 · 上海一区</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 概览数据 -->
+        <div class="px-5">
+          <div class="bg-white rounded-2xl shadow-sm p-4 grid grid-cols-2 text-center">
+            <div>
+              <div class="text-xl font-bold text-[var(--brand)]">68</div>
+              <div class="text-xs text-[var(--ink-3)] mt-1">已邀请店员</div>
+            </div>
+            <div class="border-l border-[var(--line)]">
+              <div class="text-xl font-bold text-[var(--accent)]">12</div>
+              <div class="text-xs text-[var(--ink-3)] mt-1">已覆盖门店</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 金刚区（与店员端一致） -->
+        <div class="px-5 mt-4">
+          <div class="bg-white rounded-2xl shadow-sm p-4 grid grid-cols-4 gap-2 text-center">
+            <a href="#screen-staff-fav" class="flex flex-col items-center gap-2">
+              <div class="w-12 h-12 rounded-full bg-[var(--gold-soft)] flex items-center justify-center"><i class="ri-bookmark-line text-xl text-[var(--gold)]"></i></div>
+              <span class="text-xs text-[var(--ink-2)]">我的收藏</span>
+            </a>
+            <a href="#screen-staff-like" class="flex flex-col items-center gap-2">
+              <div class="w-12 h-12 rounded-full bg-[#FFE9E5] flex items-center justify-center"><i class="ri-thumb-up-line text-xl text-[#F5468C]"></i></div>
+              <span class="text-xs text-[var(--ink-2)]">我的点赞</span>
+            </a>
+            <a href="#screen-staff-study" class="flex flex-col items-center gap-2">
+              <div class="w-12 h-12 rounded-full bg-[var(--brand-light)] flex items-center justify-center"><i class="ri-history-line text-xl text-[var(--brand)]"></i></div>
+              <span class="text-xs text-[var(--ink-2)]">学习记录</span>
+            </a>
+            <a href="#screen-staff-wrong" class="flex flex-col items-center gap-2">
+              <div class="w-12 h-12 rounded-full bg-[#F0EAFF] flex items-center justify-center"><i class="ri-file-list-3-line text-xl text-[#7E5BEF]"></i></div>
+              <span class="text-xs text-[var(--ink-2)]">错题集</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 用户管理 / 隐私协议 -->
+        <div class="px-5 mt-4">
+          <div class="bg-white rounded-2xl py-1 px-4">
+            <a href="#screen-rep-staff" class="flex items-center gap-3 py-3.5 border-b border-[var(--line)]">
+              <i class="ri-team-line text-lg text-[var(--ink-2)]"></i>
+              <span class="flex-1 text-sm">用户管理</span>
+              <span class="text-xs text-[var(--ink-3)]">68 人</span>
+              <i class="ri-arrow-right-s-line text-[var(--ink-3)]"></i>
+            </a>
+            <div class="flex items-center gap-3 py-3.5">
+              <i class="ri-shield-check-line text-lg text-[var(--ink-2)]"></i>
+              <span class="flex-1 text-sm">隐私协议</span>
+              <i class="ri-arrow-right-s-line text-[var(--ink-3)]"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- 退出登录 -->
+        <div class="px-5 mt-4">
+          <button class="w-full bg-white rounded-2xl py-3.5 text-[var(--accent)] font-medium text-sm">退出登录</button>
+        </div>
+        <div class="h-4"></div>
+      </div>
+      <div class="tab-bar">
+        <a href="#screen-staff-home" class="item"><i class="ri-home-5-line"></i><span>首页</span></a>
+        <a href="#screen-staff-rank" class="item"><i class="ri-trophy-line"></i><span>排行榜</span></a>
+        <a href="#screen-rep-me" class="item active"><i class="ri-user-3-fill"></i><span>我的</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8.3 邀请二维码 -->
+  <div class="screen-wrap">
+    <div class="screen-title">8.3 我的邀请码（陪同模式）</div>
+    <div id="screen-rep-qr" class="screen" style="background: linear-gradient(180deg,#1F6FEB 0%, #0E4DBF 100%);">
+      <div class="capsule capsule-light"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="status-bar" style="color:#fff;"><span>9:41</span><span class="right text-white"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+      <div class="nav-bar"><a class="text-white" href="#screen-rep-me"><i class="ri-arrow-left-line text-xl"></i></a><span class="title text-white">我的邀请码</span><i class="ri-share-forward-line text-xl text-white"></i></div>
+      <div class="px-6 pt-4 flex-1 flex flex-col items-center text-white">
+        <div class="text-2xl font-bold mt-1">王晓明</div>
+        <div class="text-xs opacity-80 mt-1">华东大区 · 上海一区</div>
+
+        <!-- QR card -->
+        <div class="mt-6 bg-white rounded-3xl p-6 w-full text-center shadow-2xl">
+          <div class="text-xs text-[var(--ink-3)]">扫码加入金汇学</div>
+          <div class="mx-auto my-4 w-44 h-44 relative">
+            <div class="absolute inset-0 qr-pattern rounded-lg"></div>
+            <!-- corner blocks -->
+            <div class="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-[var(--brand)] rounded-tl"></div>
+            <div class="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-[var(--brand)] rounded-tr"></div>
+            <div class="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-[var(--brand)] rounded-bl"></div>
+            <div class="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-[var(--brand)] rounded-br"></div>
+            <!-- center logo -->
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-lg bg-white p-1">
+                <div class="w-full h-full rounded grad-brand flex items-center justify-center"><i class="ri-capsule-line text-white"></i></div>
+              </div>
+            </div>
+          </div>
+          <div class="text-[10px] text-[var(--ink-3)] mt-1">📱 长按二维码识别 · 微信扫一扫</div>
+        </div>
+
+        <div class="flex-1"></div>
+        <button class="w-full bg-white text-[var(--brand)] py-3.5 rounded-full font-semibold mt-4 flex items-center justify-center gap-2"><i class="ri-share-forward-fill"></i> 微信发送</button>
+        <button class="w-full bg-white/20 backdrop-blur text-white py-3 rounded-full text-sm font-medium mt-2 mb-6">保存到相册</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8.4 用户管理 -->
+  <div class="screen-wrap">
+    <div class="screen-title">8.4 用户管理</div>
+    <div id="screen-rep-staff" class="screen">
+      <div class="capsule"><i class="ri-more-fill"></i><span class="cap-divider"></span><i class="ri-focus-2-line"></i></div>
+      <div class="status-bar"><span>9:41</span><span class="right"><i class="ri-signal-tower-fill"></i><i class="ri-wifi-fill"></i><i class="ri-battery-fill"></i></span></div>
+      <div class="nav-bar">
+        <a href="#screen-rep-me"><i class="ri-arrow-left-line text-xl"></i></a>
+        <span class="title">用户管理（68）</span>
+        <a href="#screen-rep-qr"><i class="ri-user-add-line text-xl text-[var(--brand)]"></i></a>
+      </div>
+      <!-- search -->
+      <div class="px-5 pb-2">
+        <div class="bg-white rounded-full px-4 py-2 flex items-center gap-2 border border-[var(--line)]">
+          <i class="ri-search-line text-[var(--ink-3)]"></i>
+          <input class="flex-1 outline-none text-sm bg-transparent" placeholder="搜索用户姓名 / 门店" />
+          <i class="ri-equalizer-line text-[var(--ink-3)]"></i>
+        </div>
+      </div>
+      <!-- filter pills · 按药店筛选 -->
+      <div class="px-5 pb-2 flex gap-2 overflow-x-auto">
+        <button class="px-3 py-1 rounded-full bg-[var(--brand)] text-white text-xs whitespace-nowrap">全部药店 (68)</button>
+        <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">国大药房 (32)</button>
+        <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">益丰大药房 (18)</button>
+        <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">老百姓大药房 (12)</button>
+        <button class="px-3 py-1 rounded-full bg-white border border-[var(--line)] text-xs whitespace-nowrap">大参林 (6)</button>
+      </div>
+      <div class="scroll px-5 pb-4 space-y-3">
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full grad-gold flex items-center justify-center text-white font-bold">赵</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold">赵敏</span>
+                <span class="chip" style="background:var(--brand-light);color:var(--brand);">执业药师</span>
+              </div>
+              <div class="text-xs text-[var(--ink-3)] mt-0.5">国大药房 · 陆家嘴店</div>
+              <div class="flex items-center gap-3 mt-2 text-xs">
+                <span class="text-[var(--accent)] font-semibold">4,180 活力值</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full grad-warm flex items-center justify-center text-white font-bold">李</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold">李娟</span>
+                <span class="chip" style="background:var(--green-soft);color:var(--green);">店员</span>
+              </div>
+              <div class="text-xs text-[var(--ink-3)] mt-0.5">国大药房 · 张江高科店</div>
+              <div class="flex items-center gap-3 mt-2 text-xs">
+                <span class="text-[var(--accent)] font-semibold">2,860 活力值</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full grad-pink flex items-center justify-center text-white font-bold">陈</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold">陈丽</span>
+                <span class="chip" style="background:var(--brand-light);color:var(--brand);">执业药师</span>
+              </div>
+              <div class="text-xs text-[var(--ink-3)] mt-0.5">益丰大药房 · 浦东新店</div>
+              <div class="flex items-center gap-3 mt-2 text-xs">
+                <span class="text-[var(--accent)] font-semibold">3,420 活力值</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-[var(--accent-soft)] flex items-center justify-center text-[var(--accent)] font-bold">孙</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold">孙佳</span>
+                <span class="chip" style="background:var(--green-soft);color:var(--green);">店员</span>
+              </div>
+              <div class="text-xs text-[var(--ink-3)] mt-0.5">国大药房 · 陆家嘴店</div>
+              <div class="flex items-center gap-3 mt-2 text-xs">
+                <span class="text-[var(--accent)] font-semibold">2,180 活力值</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-[var(--brand-light)] flex items-center justify-center text-[var(--brand)] font-bold">周</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold">周小芸</span>
+                <span class="chip" style="background:var(--green-soft);color:var(--green);">店员</span>
+              </div>
+              <div class="text-xs text-[var(--ink-3)] mt-0.5">国大药房 · 张江高科店</div>
+              <div class="flex items-center gap-3 mt-2 text-xs">
+                <span class="text-[var(--accent)] font-semibold">2,050 活力值</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ 页脚 ============ -->
+<div class="toc">
+  <div class="text-center text-[var(--ink-3)] text-xs pt-8">
+    金汇学 · 线上教育互动工具 · 高保真原型 v1.0<br/>
+    覆盖代表端与店员端 P0/P1 全部模块 · 2026-04-30
+  </div>
+</div>
+
+<script>
+// 活力值明细：获得 / 消耗 / 全部 切换
+function pointsFilter(btn, type){
+  var tabs = btn.parentElement;
+  tabs.querySelectorAll('button').forEach(function(b){
+    b.classList.remove('bg-[var(--accent-soft)]','text-[var(--accent)]','font-semibold');
+    b.classList.add('text-[var(--ink-2)]');
+  });
+  btn.classList.add('bg-[var(--accent-soft)]','text-[var(--accent)]','font-semibold');
+  btn.classList.remove('text-[var(--ink-2)]');
+  var list = document.querySelector('[data-points-list]');
+  list.querySelectorAll('[data-day-group]').forEach(function(group){
+    var visible = 0;
+    group.querySelectorAll('[data-type]').forEach(function(row){
+      var show = (type === 'all') || (row.getAttribute('data-type') === type);
+      row.style.display = show ? '' : 'none';
+      if(show) visible++;
+    });
+    // 该日期下无记录时，日期标题与分组一起隐藏
+    var label = list.querySelector('[data-day="'+group.getAttribute('data-day-group')+'"]');
+    group.style.display = visible ? '' : 'none';
+    if(label) label.style.display = visible ? '' : 'none';
+  });
+}
+
+// 我的收藏 / 我的点赞：单条左滑显示「取消收藏 / 取消」操作
+function swipeOpen(el){
+  document.querySelectorAll('.swipe-row.open').forEach(function(r){ if(r!==el) r.classList.remove('open'); });
+  el.classList.toggle('open');
+}
+
+// 协议勾选：勾选后启用按钮
+function toggleAgree(iconId, ctaIds){
+  var icon = document.getElementById(iconId);
+  var checked = icon.getAttribute('data-checked') === '1';
+  checked = !checked;
+  icon.setAttribute('data-checked', checked ? '1' : '0');
+  icon.className = checked
+    ? 'ri-checkbox-circle-fill text-base mt-0.5'
+    : 'ri-checkbox-blank-circle-line text-base mt-0.5';
+  var ids = Array.isArray(ctaIds) ? ctaIds : [ctaIds];
+  ids.forEach(function(id){
+    var cta = document.getElementById(id);
+    if(!cta) return;
+    if(checked){ cta.classList.remove('opacity-50','pointer-events-none'); }
+    else{ cta.classList.add('opacity-50','pointer-events-none'); }
+  });
+}
+</script>
+
+</body>
+</html>
